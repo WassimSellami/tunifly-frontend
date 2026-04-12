@@ -1,4 +1,4 @@
-const BASE_URL = 'https://tunifly-service.onrender.com';
+const BASE_URL = 'https://tunifly-backend-d67d3.ondigitalocean.app';
 
 export const fetchAirlines = async () => {
     try {
