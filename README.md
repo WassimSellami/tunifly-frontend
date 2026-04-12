@@ -2,7 +2,7 @@
 
 The React-based web frontend for **TuniFly** — a flight tracking and price monitoring app for Tunisia. It provides an interactive dashboard to search flights, visualize price history charts, and manage price alert subscriptions.
 
-**Live website:** [tunifly.onrender.com](https://tunifly.onrender.com)
+**Live website:** [tunifly.me](https://tunifly.onrender.com)
 
 ## Features
 
