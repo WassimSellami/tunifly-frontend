@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import FlightSearchForm from './FlightSearchForm';
 import { fetchSubscriptionsByEmail } from './api';
+import { LanguageContext, languages, translate } from './i18n';
 import './App.css';
 
 function App() {
@@ -13,6 +14,9 @@ function App() {
   const [userSubscriptions, setUserSubscriptions] = useState([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [subscriptionsError, setSubscriptionsError] = useState(null);
+  const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
+  const selectedLanguage = languages.find(({ code }) => code === language) || languages[0];
+  const t = (key, values) => translate(language, key, values);
 
   useEffect(() => {
     localStorage.setItem('userEmail', userEmail);
@@ -21,6 +25,12 @@ function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('language', language);
+    document.documentElement.lang = language;
+    document.documentElement.dir = selectedLanguage.dir;
+  }, [language, selectedLanguage.dir]);
 
   useEffect(() => {
     const loadSubscriptions = async () => {
@@ -44,17 +54,25 @@ function App() {
   }, [userEmail]);
 
   return (
-    <div className={`App ${theme}-theme`}>
+    <LanguageContext.Provider value={{ language, t }}>
+    <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
       <div className="theme-controls">
+        <div className="language-selector" aria-label={t('language')}>
+          {languages.map(({ code, label, flag }) => (
+            <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
+              <img className="language-flag" src={flag} alt="" aria-hidden="true" /><span className="language-label">{label}</span>
+            </button>
+          ))}
+        </div>
         <button
           type="button"
           className="theme-toggle"
           onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
           aria-pressed={theme === 'dark'}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          aria-label={t('switchMode', { mode: t(theme === 'dark' ? 'lightMode' : 'darkMode') })}
         >
           <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
-          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+          {theme === 'dark' ? t('lightMode') : t('darkMode')}
         </button>
       </div>
       <main className="main-content">
@@ -69,6 +87,7 @@ function App() {
         />
       </main>
     </div>
+    </LanguageContext.Provider>
   );
 }
 

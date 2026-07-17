@@ -17,6 +17,7 @@ import {
     Legend,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
+import { useLanguage } from './i18n';
 
 ChartJS.register(
     CategoryScale,
@@ -29,6 +30,7 @@ ChartJS.register(
 );
 
 const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, subscriptionsLoading, subscriptionsError, setUserSubscriptions }) => {
+    const { t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
@@ -404,23 +406,23 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
     }, [minSelectableDate, maxSelectableDate]);
 
     const loadingMessage = loading && searchResults === null && error === null && (
-        <div className="info-message">Searching flights...</div>
+        <div className="info-message">{t('searching')}</div>
     );
     const errorMessage = error && (!allAirports.length || !allAirlines.length) && (
         <div className="info-message">Error: {error}</div>
     );
     const noFlightsMessage = searchResults && Object.keys(searchResults).length === 0 && !loading && (
-        <div className="info-message">No flights found for your selected criteria.</div>
+        <div className="info-message">{t('noFlights')}</div>
     );
 
     return (
         <div className="flight-search-container">
-            <h1>Welcome to Tunisia Flights Tracker !</h1>
+            <h1>{t('welcome')}</h1>
             <form onSubmit={handleSubmit} className="form-grid">
                 <fieldset className="email-section full-span">
-                    <legend>0. Flight Price Alerts Subscription</legend>
+                    <legend>{t('subscription')}</legend>
                     <div className="input-group">
-                        <label htmlFor="userEmail">Email:</label>
+                        <label htmlFor="userEmail">{t('email')}</label>
                         <input
                             type="email"
                             id="userEmail"
@@ -432,12 +434,12 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                                 setFormErrors(prev => ({ ...prev, userEmail: null, userExists: null }));
                             }}
                             onBlur={handleEmailBlur}
-                            placeholder="Enter your email"
+                            placeholder={t('emailPlaceholder')}
                             className="text-input"
                         />
                     </div>
                     <p className="email-clarification-text">
-                        We'll use this email to save your preferences and send price alerts.
+                        {t('emailHelp')}
                     </p>
                     {formErrors.userEmail && <p className="error-message-inline">{formErrors.userEmail}</p>}
                     {userCheckLoading && <p className="loading-spinner">Checking user status...</p>}
@@ -445,9 +447,9 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                     {!userCheckLoading && !userExists && userEmail && userEmail.includes('@') && userEmail.includes('.') && (
                         <div className="save-user-section">
                             <button type="button" className="save-user-button" onClick={handleSaveUser}>
-                                Save My Email
+                                {t('saveEmail')}
                             </button>
-                            <p className="save-user-info-text">Save your email to enable subscriptions and notifications.</p>
+                            <p className="save-user-info-text">{t('saveEmailHelp')}</p>
                         </div>
                     )}
                     {userExists && !userCheckLoading && (
@@ -458,11 +460,11 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                                         type="checkbox"
                                         checked={enableEmailNotifications}
                                         onChange={(e) => setEnableEmailNotifications(e.target.checked)}
-                                    /> Enable Email Notifications
+                                    /> {t('notifications')}
                                 </label>
                             </div>
                             <p className="subscription-info-text">
-                                To add a new subscription, first search for flights, then click on a result to set a price alert.
+                                {t('subscriptionHelp')}
                             </p>
                             {displaySubsLoading && <p className="loading-spinner">Loading your subscriptions...</p>}
                             {subscriptionsError && !displaySubsLoading && <p className="error-text-small">{subscriptionsError}</p>}
@@ -510,10 +512,10 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                     {formErrors.userExists && <p className="error-message-inline">{formErrors.userExists}</p>}
                 </fieldset>
                 <fieldset className="airport-selection-section full-span">
-                    <legend>1. Select Departure & Arrival Airports</legend>
+                    <legend>{t('airports')}</legend>
                     <div className="airport-selection-grid">
                         <div className="departure-airports-column">
-                            <h3>Departure: {isTunisiaDeparture ? 'Tunisia' : 'Germany'}</h3>
+                            <h3>{t('departure')} {t(isTunisiaDeparture ? 'tunisia' : 'germany')}</h3>
                             <div className="button-group-vertical">
                                 {(isTunisiaDeparture ? tunisianAirports : germanAirports).map(airport => (
                                     <button
@@ -533,13 +535,13 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                                 type="button"
                                 className="direction-switch-button"
                                 onClick={handleDirectionSwitch}
-                                title="Switch Direction"
+                                title={t('switchDirection')}
                             >
                                 ⇄
                             </button>
                         </div>
                         <div className="arrival-airports-column">
-                            <h3>Arrival: {isTunisiaDeparture ? 'Germany' : 'Tunisia'}</h3>
+                            <h3>{t('arrival')} {t(isTunisiaDeparture ? 'germany' : 'tunisia')}</h3>
                             <div className="button-group-vertical">
                                 {(isTunisiaDeparture ? germanAirports : tunisianAirports).map(airport => (
                                     <button
@@ -557,8 +559,8 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                     </div>
                 </fieldset>
                 <fieldset className="date-range-section full-span">
-                    <legend>3. Select Date Range</legend>
-                    <div className="date-range-presets" aria-label="Date range presets">
+                    <legend>{t('dateRange')}</legend>
+                    <div className="date-range-presets" aria-label={t('datePresets')}>
                         {dateRangePresets.map((preset) => {
                             const isSelected = isSameDay(startDate, preset.start) && isSameDay(endDate, preset.end);
                             return (
@@ -575,8 +577,8 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                     </div>
                     <div className="date-range-slider-container">
                         <div className="selected-date-display">
-                            <span>Start: {format(startDate, 'dd MMM yyyy')}</span>
-                            <span>End: {format(endDate, 'dd MMM yyyy')}</span>
+                            <span>{t('start')} {format(startDate, 'dd MMM yyyy')}</span>
+                            <span>{t('end')} {format(endDate, 'dd MMM yyyy')}</span>
                         </div>
                         <Slider
                             range
@@ -598,7 +600,7 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                     {formErrors.dateRange && <p className="error-message-inline">{formErrors.dateRange}</p>}
                 </fieldset>
                 <fieldset className="airline-selection-section full-span">
-                    <legend>4. Select Preferred Airlines (Multi-select)</legend>
+                    <legend>{t('airlines')}</legend>
                     <div className="button-group">
                         {allAirlines.filter(a => a.code === 'BJ' || a.code === 'TU').map(airline => (
                             <button
@@ -614,7 +616,7 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                 </fieldset>
             </form>
             <button type="submit" className="submit-button" onClick={handleSubmit}>
-                Show Flights
+                {t('showFlights')}
             </button>
             {loadingMessage}
             {errorMessage}

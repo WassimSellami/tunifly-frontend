@@ -110,10 +110,18 @@ body,
   width: 90%;
   display: flex;
   justify-content: flex-end;
+  gap: 0.75rem;
   margin-bottom: -1rem;
   position: relative;
   z-index: 1;
 }
+
+.language-selector { display: inline-flex; gap: 0.3rem; padding: 0.25rem; background: var(--section-background); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
+.language-button { display: inline-flex; align-items: center; gap: .35rem; background: transparent; color: var(--text-color); border: 1px solid transparent; padding: .3rem .5rem; font-size: .85rem; }
+.language-flag { width: 1.25rem; height: .9rem; border-radius: 2px; object-fit: cover; box-shadow: 0 0 0 1px rgba(255,255,255,.3); }
+.language-button.active { background: var(--primary-button-bg); color: var(--primary-button-text); border-color: var(--primary-button-bg); }
+.language-button:hover { background: var(--secondary-button-bg); }
+.language-button.active:hover { background: var(--primary-button-bg); }
 
 .theme-toggle {
   display: inline-flex;
@@ -859,6 +867,10 @@ textarea:focus,
   font-weight: 500;
 }
 
+.chart-navigation-rtl {
+  flex-direction: row-reverse;
+}
+
 @media (max-width: 900px) {
   .App {
     padding: 1rem 0;
@@ -872,6 +884,7 @@ textarea:focus,
   .theme-controls {
     width: 96%;
   }
+  .language-label { display: none; }
 
   h1 {
     font-size: 2.1rem;

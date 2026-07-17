@@ -13,6 +13,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { format as dateFormatFns, parseISO } from 'date-fns';
+import { useLanguage } from './i18n';
 
 import tuLogo from './assets/tu_logo.png';
 import bjLogo from './assets/bj_logo.png';
@@ -39,6 +40,8 @@ const getFlightsPerPage = () => {
 };
 
 const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, userSubscriptions, setUserSubscriptions, enableEmailNotifications }) => {
+    const { t, language } = useLanguage();
+    const isRtl = language === 'ar';
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
@@ -156,8 +159,8 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
         <>
             <div className="flight-results-container">
                 <h2>
-                    Flight Price Trends
-                    <span className="click-details-text"> (Click a bar to show details)</span>
+                    {t('trends')}
+                    <span className="click-details-text"> {t('clickDetails')}</span>
                 </h2>
                 <div className="results-grid">
                     {Object.keys(groupedFlights).sort().map(route => {
@@ -247,7 +250,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                         const data = {
                             labels: labels,
                             datasets: [{
-                                label: 'Current Price (EUR)',
+                                label: t('currentPrice'),
                                 data: prices,
                                 backgroundColor: priceBarColors,
                                 borderColor: priceBarColors,
@@ -260,7 +263,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                                             display: true,
                                             anchor: 'center',
                                             align: 'center',
-                                            offset: 30,
+                                            offset: 0,
                                             color: 'white',
                                             font: { weight: 'bold', size: isSmallScreen ? 12 : 18 },
                                             formatter: (value, context) => {
@@ -297,7 +300,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: `Prices for Route: ${chartRouteTitle}`,
+                                    text: `${t('pricesForRoute')} ${chartRouteTitle}`,
                                     color: chartTitleColor,
                                     font: { size: 20, weight: 'bold' },
                                     padding: { top: 10, bottom: 40 }
@@ -318,7 +321,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                             scales: {
                                 x: {
                                     type: 'category',
-                                    title: { display: true, text: 'Departure Date', color: axisTitleColor, font: { size: 14 } },
+                                    title: { display: true, text: t('departureDate'), color: axisTitleColor, font: { size: 14 } },
                                     ticks: {
                                         color: axisTickColor, font: { size: 13 },
                                         callback: function (value) {
@@ -329,7 +332,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                                     grid: { color: gridLineColor }
                                 },
                                 y: {
-                                    title: { display: true, text: 'Price (EUR)', color: axisTitleColor, font: { size: 14 } },
+                                    title: { display: true, text: t('priceEur'), color: axisTitleColor, font: { size: 14 } },
                                     ticks: { color: axisTickColor, font: { size: 13 } },
                                     grid: { color: gridLineColor },
                                     beginAtZero: true,
@@ -339,21 +342,21 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
 
                         return (
                             <div key={route} className="chart-card">
-                                <div className="chart-plot">
+                                <div className="chart-plot" dir="ltr">
                                     {paginatedFlights.length > 0 ? (
                                         <Bar key={`${route}-${loadedIconCount}`} data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
                                     ) : (
-                                        <p className="info-message">No flight data to display for this route.</p>
+                                        <p className="info-message">{t('noRouteData')}</p>
                                     )}
                                 </div>
                                 {totalPages > 1 && (
-                                    <div className="chart-navigation">
+                                    <div className={`chart-navigation ${isRtl ? 'chart-navigation-rtl' : ''}`} dir="ltr">
                                         <button onClick={() => handlePageChange(route, currentPage - 1)} disabled={currentPage === 0}>
-                                            &larr;
+                                            {isRtl ? '→' : '←'}
                                         </button>
-                                        <span>Page {currentPage + 1} of {totalPages}</span>
+                                        <span>{t('page', { current: currentPage + 1, total: totalPages })}</span>
                                         <button onClick={() => handlePageChange(route, currentPage + 1)} disabled={currentPage >= totalPages - 1}>
-                                            &rarr;
+                                            {isRtl ? '←' : '→'}
                                         </button>
                                     </div>
                                 )}

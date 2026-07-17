@@ -12,6 +12,7 @@ import {
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import 'chartjs-adapter-date-fns';
 import { parseISO, differenceInDays, format } from 'date-fns';
+import { useLanguage } from './i18n';
 
 ChartJS.register(
     CategoryScale, LinearScale, PointElement, LineElement, TimeScale, Title, Tooltip, Legend, Filler, ChartDataLabels
@@ -35,7 +36,7 @@ const AirlineDisplay = ({ code, name }) => {
     );
 };
 
-const PriceGauge = ({ current, analytics }) => {
+const PriceGauge = ({ current, analytics, t }) => {
     if (!analytics) return null;
     const { gaugeMin, gaugeMax, minPrice, maxPrice, lowThreshold, highThreshold, status } = analytics;
     const gaugeRange = gaugeMax - gaugeMin;
@@ -52,8 +53,8 @@ const PriceGauge = ({ current, analytics }) => {
     return (
         <div className="price-gauge-container">
             <div className="gauge-range-labels">
-                <span className="gauge-min-label">Min</span>
-                <span className="gauge-max-label">Max</span>
+                <span className="gauge-min-label">{t('min')}</span>
+                <span className="gauge-max-label">{t('max')}</span>
             </div>
             <div className="gauge-track">
                 <div className="gauge-bar-low" style={{ width: `${lowWidth}%` }}></div>
@@ -76,6 +77,7 @@ const PriceGauge = ({ current, analytics }) => {
 
 
 const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSubscriptions = [], setUserSubscriptions }) => {
+    const { t } = useLanguage();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [targetPrice, setTargetPrice] = useState('');
@@ -277,12 +279,12 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <button className="modal-close-button" onClick={onClose} aria-label="Close flight details">&times;</button>
+                <button className="modal-close-button" onClick={onClose} aria-label={t('closeDetails')}>&times;</button>
                 <div className="modal-column-left">
                     <div className="price-history-section">
-                        <h3>Price History for this Search</h3>
+                        <h3>{t('history')}</h3>
                         <div className="modal-chart-container">
-                            {!loading && chartData.datasets[0].data.length > 1 ? (<Line options={chartOptions} data={chartData} />) : (<p>Loading chart...</p>)}
+                            {!loading && chartData.datasets[0].data.length > 1 ? (<Line options={chartOptions} data={chartData} />) : (<p>{t('loadingChart')}</p>)}
                         </div>
                     </div>
                 </div>
@@ -301,12 +303,12 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                     </div>
 
                     <div className="price-gauge-wrapper">
-                        {!loading && <PriceGauge current={flight.priceEur} analytics={priceAnalytics} />}
+                        {!loading && <PriceGauge current={flight.priceEur} analytics={priceAnalytics} t={t} />}
                     </div>
 
                     <div className="modal-actions-panel">
                         <div className="subscription-form-container">
-                            <h3>Track this Flight</h3>
+                            <h3>{t('trackFlight')}</h3>
                             <div className="form-group">
                                 <input
                                     type="number"
@@ -317,21 +319,21 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                                     disabled={submitting || !userEmail}
                                 />
                                 <button type="button" className="action-button" onClick={handleSetAlert} disabled={submitting || !userEmail}>
-                                    {submitting ? 'Saving...' : currentSubscription ? 'Update Alert' : 'Set Alert'}
+                                    {submitting ? t('saving') : currentSubscription ? t('updateAlert') : t('setAlert')}
                                 </button>
                             </div>
                             {!userEmail && (
-                                <p className="subscription-email-prompt">Enter your email first to track this flight.</p>
+                                <p className="subscription-email-prompt">{t('emailFirst')}</p>
                             )}
                             {currentSubscription && (
-                                <p className="subscription-feedback success">You are already tracking this flight. Update the target price if needed.</p>
+                                <p className="subscription-feedback success">{t('alreadyTracking')}</p>
                             )}
                             {subscriptionFeedback && (
                                 <p className={`subscription-feedback ${subscriptionFeedback.type}`}>{subscriptionFeedback.text}</p>
                             )}
                         </div>
                         <div className="book-now-container">
-                            <h3>Ready to Book?</h3>
+                            <h3>{t('readyToBook')}</h3>
                             <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>Book Now ✈️</a>
                         </div>
                     </div>
