@@ -128,6 +128,8 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
                 const deAirports = airports.filter(a => a.country === 'DE');
                 setTunisianAirports(tnAirports);
                 setGermanAirports(deAirports);
+                setSelectedDepartureAirportCodes(tnAirports.length > 0 ? [tnAirports[0].code] : []);
+                setSelectedArrivalAirportCodes(deAirports.length > 0 ? [deAirports[0].code] : []);
             } catch (err) {
                 setError("Failed to load initial data. " + err.message);
             } finally {

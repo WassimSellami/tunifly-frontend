@@ -220,6 +220,8 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
     if (!flight) return null;
 
     const airline = airlines.find(a => a.code === flight.airlineCode);
+    const historicalMinPrice = flight.minPrice ?? priceAnalytics?.minPrice;
+    const historicalMaxPrice = flight.maxPrice ?? priceAnalytics?.maxPrice;
     const departureDateFormatted = format(parseISO(flight.departureDate), 'EEE, dd MMM yyyy');
     const chartData = {
         datasets: [{
@@ -254,6 +256,11 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                         <p className="price-range-info">
                             Similar trips usually cost between €{priceAnalytics?.lowThreshold.toFixed(0)}–€{priceAnalytics?.highThreshold.toFixed(0)}.
                         </p>
+                        {historicalMinPrice != null && historicalMaxPrice != null && (
+                            <p className="price-range-info">
+                                Historical minimum: €{historicalMinPrice.toFixed(0)} · maximum: €{historicalMaxPrice.toFixed(0)}.
+                            </p>
+                        )}
                     </div>
 
                     <div className="price-gauge-wrapper">

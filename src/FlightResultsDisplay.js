@@ -53,11 +53,29 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
     const axisTickColor = '#FFFFFF';
     const gridLineColor = 'rgba(255, 255, 255, 0.15)';
 
-    const barBackgroundColor = 'rgba(52, 152, 219, 0.9)';
-    const barBorderColor = 'rgba(41, 128, 185, 1)';
-    const minLabelColor = 'rgba(144, 238, 144, 1)';
-    const maxLabelColor = 'rgba(255, 105, 97, 1)';
-    const labelBackgroundColor = 'rgba(30, 30, 30, 0.8)';
+    const lowPriceBarColor = '#28a745';
+    const averagePriceBarColor = '#ffc107';
+    const highPriceBarColor = '#dc3545';
+
+    const getPriceBarColor = useCallback((flight) => {
+        const { priceEur, minPrice, maxPrice } = flight;
+        const priceRange = maxPrice - minPrice;
+
+        if (minPrice == null || maxPrice == null || priceRange <= 0) {
+            return averagePriceBarColor;
+        }
+
+        const lowThreshold = minPrice + (priceRange * 0.25);
+        const highThreshold = minPrice + (priceRange * 0.75);
+
+        if (priceEur < lowThreshold) {
+            return lowPriceBarColor;
+        }
+        if (priceEur > highThreshold) {
+            return highPriceBarColor;
+        }
+        return averagePriceBarColor;
+    }, []);
 
     useEffect(() => {
         const imageObjects = {};
@@ -152,6 +170,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
 
                         const labels = paginatedFlights.map(f => f.departureDate.split('T')[0]);
                         const prices = paginatedFlights.map(f => f.priceEur);
+                        const priceBarColors = paginatedFlights.map(getPriceBarColor);
 
                         const [depCode, arrCode] = route.split('-');
                         const depName = getAirportDisplayName(depCode);
@@ -172,10 +191,32 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                     const icon = loadedIcons[code];
 
                                     if (icon) {
-                                        const logoWidth = element.width * 0.9;
-                                        const logoHeight = logoWidth * (icon.height / icon.width);
+                                        const logoCardWidth = element.width * 0.9;
+                                        const logoCardHeight = logoCardWidth * 0.55;
+                                        const logoPadding = 4;
+                                        const logoCardX = element.x - (logoCardWidth / 2);
+                                        const logoCardY = Math.max(
+                                            chart.chartArea.top + logoPadding,
+                                            element.y - logoCardHeight - 4
+                                        );
+                                        const availableWidth = logoCardWidth - (logoPadding * 2);
+                                        const availableHeight = logoCardHeight - (logoPadding * 2);
+                                        const logoScale = Math.min(availableWidth / icon.width, availableHeight / icon.height);
+                                        const logoWidth = icon.width * logoScale;
+                                        const logoHeight = icon.height * logoScale;
                                         const x = element.x - (logoWidth / 2);
-                                        const y = element.y + 2;
+                                        const y = logoCardY + ((logoCardHeight - logoHeight) / 2);
+
+                                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                                        ctx.beginPath();
+                                        ctx.roundRect(
+                                            logoCardX,
+                                            logoCardY,
+                                            logoCardWidth,
+                                            logoCardHeight,
+                                            4
+                                        );
+                                        ctx.fill();
                                         ctx.drawImage(icon, x, y, logoWidth, logoHeight);
                                     }
                                 });
@@ -188,8 +229,8 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                             datasets: [{
                                 label: 'Current Price (EUR)',
                                 data: prices,
-                                backgroundColor: barBackgroundColor,
-                                borderColor: barBorderColor,
+                                backgroundColor: priceBarColors,
+                                borderColor: priceBarColors,
                                 borderWidth: 1,
                                 maxBarThickness: 100,
                                 datalabels: {
@@ -210,36 +251,6 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                                 }
                                                 return `€${value.toFixed(0)} ${isSubscribed ? '★' : ''}`;
                                             }
-                                        },
-                                        minPrice: {
-                                            display: true,
-                                            align: 'center',
-                                            anchor: 'start',
-                                            offset: 4,
-                                            color: minLabelColor,
-                                            font: { weight: 'bold', size: 14 },
-                                            formatter: (value, context) => {
-                                                const flight = paginatedFlights[context.dataIndex];
-                                                return flight.minPrice !== null ? `€ ${flight.minPrice.toFixed(0)}` : '';
-                                            },
-                                            padding: { top: 2, bottom: 2, left: 4, right: 4 },
-                                            backgroundColor: labelBackgroundColor,
-                                            borderRadius: 4,
-                                        },
-                                        maxPrice: {
-                                            display: true,
-                                            align: 'center',
-                                            anchor: 'end',
-                                            offset: 4,
-                                            color: maxLabelColor,
-                                            font: { weight: 'bold', size: 14 },
-                                            formatter: (value, context) => {
-                                                const flight = paginatedFlights[context.dataIndex];
-                                                return flight.maxPrice !== null ? `€ ${flight.maxPrice.toFixed(0)}` : '';
-                                            },
-                                            padding: { top: 2, bottom: 2, left: 4, right: 4 },
-                                            backgroundColor: labelBackgroundColor,
-                                            borderRadius: 4,
                                         }
                                     }
                                 }
@@ -250,7 +261,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                             responsive: true,
                             maintainAspectRatio: false,
                             layout: {
-                                paddingTop: 30
+                                paddingTop: 70
                             },
                             onClick: (event, elements) => {
                                 if (elements.length > 0) {
@@ -279,8 +290,6 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                             const isSubscribed = userSubscriptions.some(sub => sub.flightId === flight.id);
                                             let tooltipText = `Price: €${context.parsed.y.toFixed(0)}`;
                                             if (isSubscribed) tooltipText += ' ★';
-                                            if (flight?.minPrice != null) tooltipText += `\nHistorical Min: €${flight.minPrice.toFixed(0)}`;
-                                            if (flight?.maxPrice != null) tooltipText += `\nHistorical Max: €${flight.maxPrice.toFixed(0)}`;
                                             return tooltipText;
                                         }
                                     }
