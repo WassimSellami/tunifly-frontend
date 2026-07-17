@@ -379,6 +379,29 @@ textarea:focus,
   padding: 0 1rem;
 }
 
+.date-range-presets {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem auto 0;
+  max-width: 680px;
+}
+
+.date-preset-button {
+  background-color: var(--input-background);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.date-preset-button.selected {
+  background-color: var(--primary-button-bg);
+  border-color: var(--primary-button-bg);
+  color: var(--primary-button-text);
+}
+
 .date-range-slider-container {
   width: 90%;
   max-width: 600px;
@@ -891,6 +914,15 @@ textarea:focus,
 
   .date-range-slider-container {
     width: 96%;
+  }
+
+  .date-range-presets {
+    justify-content: flex-start;
+  }
+
+  .date-preset-button {
+    flex: 1 1 calc(50% - 0.25rem);
+    padding: 0.5rem;
   }
 
   .selected-date-display {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, updateUserEmailNotificationSetting, fetchFlightById, fetchSubscriptionsByEmail, fetchUserByEmail, createUser } from './api';
-import { isBefore, addDays, format, differenceInDays, addMonths, startOfDay } from 'date-fns';
+import { isBefore, isAfter, isSameDay, addDays, format, differenceInDays, addMonths, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import FlightResultsDisplay from './FlightResultsDisplay';
 import 'react-datepicker/dist/react-datepicker.css';
 import './CustomDatePicker.css';
@@ -45,6 +45,27 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
     const [dateRangeSliderValues, setDateRangeSliderValues] = useState([initialStartDays, initialEndDays]);
     const [startDate, setStartDate] = useState(addDays(minSelectableDate, initialStartDays));
     const [endDate, setEndDate] = useState(addDays(minSelectableDate, initialEndDays));
+    const dateRangePresets = useMemo(() => {
+        const capAtMaximumDate = (date) => isAfter(date, maxSelectableDate) ? maxSelectableDate : date;
+        const presets = [
+            { label: 'Next 7 days', start: minSelectableDate, end: capAtMaximumDate(addDays(minSelectableDate, 6)) },
+            { label: `Rest of ${format(minSelectableDate, 'MMMM')}`, start: minSelectableDate, end: capAtMaximumDate(endOfMonth(minSelectableDate)) },
+        ];
+
+        for (let monthOffset = 1; monthOffset <= 3; monthOffset += 1) {
+            const monthStart = startOfMonth(addMonths(minSelectableDate, monthOffset));
+            if (isAfter(monthStart, maxSelectableDate)) break;
+
+            presets.push({
+                label: format(monthStart, 'MMMM'),
+                start: monthStart,
+                end: capAtMaximumDate(endOfMonth(monthStart)),
+            });
+        }
+
+        presets.push({ label: 'Next 3 months', start: minSelectableDate, end: maxSelectableDate });
+        return presets;
+    }, [minSelectableDate, maxSelectableDate]);
     const [selectedAirlineCodes, setSelectedAirlineCodes] = useState([]);
     const [searchResults, setSearchResults] = useState(null);
     const [enableEmailNotifications, setEnableEmailNotifications] = useState(true);
@@ -357,6 +378,16 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
         setFormErrors(prev => ({ ...prev, dateRange: null }));
     }, [minSelectableDate]);
 
+    const handleDateRangePreset = useCallback((preset) => {
+        setStartDate(preset.start);
+        setEndDate(preset.end);
+        setDateRangeSliderValues([
+            differenceInDays(preset.start, minSelectableDate),
+            differenceInDays(preset.end, minSelectableDate),
+        ]);
+        setFormErrors(prev => ({ ...prev, dateRange: null }));
+    }, [minSelectableDate]);
+
     const generateMarks = useCallback(() => {
         const marks = {};
         const totalDays = differenceInDays(maxSelectableDate, minSelectableDate);
@@ -527,6 +558,21 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
                 </fieldset>
                 <fieldset className="date-range-section full-span">
                     <legend>3. Select Date Range</legend>
+                    <div className="date-range-presets" aria-label="Date range presets">
+                        {dateRangePresets.map((preset) => {
+                            const isSelected = isSameDay(startDate, preset.start) && isSameDay(endDate, preset.end);
+                            return (
+                                <button
+                                    key={preset.label}
+                                    type="button"
+                                    className={`date-preset-button ${isSelected ? 'selected' : ''}`}
+                                    onClick={() => handleDateRangePreset(preset)}
+                                >
+                                    {preset.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                     <div className="date-range-slider-container">
                         <div className="selected-date-display">
                             <span>Start: {format(startDate, 'dd MMM yyyy')}</span>
