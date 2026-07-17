@@ -728,8 +728,13 @@ textarea:focus,
   margin-bottom: 4rem;
 }
 
+.chart-plot {
+  height: 400px;
+  cursor: pointer;
+}
+
 .chart-card .chartjs-render-monitor {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .airport-selection-grid {
@@ -891,7 +896,7 @@ textarea:focus,
     margin-bottom: 2.5rem;
   }
 
-  .chart-card > div {
+  .chart-plot {
     height: 350px !important;
   }
 }
@@ -1010,8 +1015,12 @@ textarea:focus,
     margin-left: 0;
   }
 
-  .chart-card > div {
-    height: 310px !important;
+  .chart-plot {
+    height: 230px !important;
+  }
+
+  .chart-card {
+    margin-bottom: 2rem;
   }
 
   .chart-navigation {

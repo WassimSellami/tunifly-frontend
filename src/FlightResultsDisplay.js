@@ -320,7 +320,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
 
                         return (
                             <div key={route} className="chart-card">
-                                <div style={{ height: '400px', cursor: 'pointer' }}>
+                                <div className="chart-plot">
                                     {paginatedFlights.length > 0 ? (
                                         <Bar key={`${route}-${loadedIconCount}`} data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
                                     ) : (
