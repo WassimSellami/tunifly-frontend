@@ -237,8 +237,8 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
 
     const handleDirectionSwitch = () => {
         setIsTunisiaDeparture(prev => !prev);
-        setSelectedDepartureAirportCodes([]);
-        setSelectedArrivalAirportCodes([]);
+        setSelectedDepartureAirportCodes(selectedArrivalAirportCodes);
+        setSelectedArrivalAirportCodes(selectedDepartureAirportCodes);
         setFormErrors(prev => ({ ...prev, selectedDepartureAirportCodes: null, selectedArrivalAirportCodes: null }));
     };
 
