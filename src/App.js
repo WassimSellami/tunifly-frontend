@@ -4,6 +4,9 @@ import { fetchSubscriptionsByEmail } from './api';
 import './App.css';
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
   const [userEmail, setUserEmail] = useState(() => {
     return localStorage.getItem('userEmail') || '';
   });
@@ -14,6 +17,10 @@ function App() {
   useEffect(() => {
     localStorage.setItem('userEmail', userEmail);
   }, [userEmail]);
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const loadSubscriptions = async () => {
@@ -37,9 +44,22 @@ function App() {
   }, [userEmail]);
 
   return (
-    <div className="App dark-theme">
+    <div className={`App ${theme}-theme`}>
+      <div className="theme-controls">
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
+          aria-pressed={theme === 'dark'}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+          {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+        </button>
+      </div>
       <main className="main-content">
         <FlightSearchForm
+          theme={theme}
           userEmail={userEmail}
           setUserEmail={setUserEmail}
           userSubscriptions={userSubscriptions}

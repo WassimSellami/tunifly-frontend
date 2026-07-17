@@ -38,7 +38,7 @@ const getFlightsPerPage = () => {
     return 9;
 };
 
-const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscriptions, setUserSubscriptions, enableEmailNotifications }) => {
+const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, userSubscriptions, setUserSubscriptions, enableEmailNotifications }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
@@ -48,10 +48,11 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
     const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 640);
     const loadedIconCount = Object.keys(loadedIcons).length;
 
-    const chartTitleColor = '#FFFFFF';
-    const axisTitleColor = '#CCCCCC';
-    const axisTickColor = '#FFFFFF';
-    const gridLineColor = 'rgba(255, 255, 255, 0.15)';
+    const isDarkTheme = theme === 'dark';
+    const chartTitleColor = isDarkTheme ? '#ffffff' : '#333333';
+    const axisTitleColor = isDarkTheme ? '#b0b0b0' : '#555555';
+    const axisTickColor = isDarkTheme ? '#909090' : '#777777';
+    const gridLineColor = isDarkTheme ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)';
 
     const lowPriceBarColor = '#28a745';
     const averagePriceBarColor = '#ffc107';
@@ -207,7 +208,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                         const x = element.x - (logoWidth / 2);
                                         const y = logoCardY + ((logoCardHeight - logoHeight) / 2);
 
-                                        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                                        ctx.fillStyle = isDarkTheme ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.98)';
                                         ctx.beginPath();
                                         ctx.roundRect(
                                             logoCardX,
@@ -345,6 +346,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
 
             {isModalOpen && (
                 <FlightDetailModal
+                    theme={theme}
                     flight={selectedFlight}
                     onClose={() => setIsModalOpen(false)}
                     airlines={airlines}

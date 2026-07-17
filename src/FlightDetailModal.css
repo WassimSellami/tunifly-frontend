@@ -12,14 +12,14 @@
 }
 
 .modal-content {
-    background-color: #2b303b;
-    color: #e0e0e0;
+    background-color: var(--section-background);
+    color: var(--text-color);
     padding: 2rem;
     border-radius: 16px;
     width: 95%;
     max-width: 1100px;
     max-height: 90vh;
-    border: 1px solid #4a4a4a;
+    border: 1px solid var(--border-color);
     display: grid;
     grid-template-columns: 55fr 45fr;
     gap: 2.5rem;
@@ -32,7 +32,7 @@
     right: 20px;
     background: none;
     border: none;
-    color: #909090;
+    color: var(--legend-color);
     font-size: 2.5rem;
     cursor: pointer;
     line-height: 1;
@@ -94,7 +94,7 @@
 
 .flight-date {
     font-size: 1.1rem;
-    color: #e0e0e0;
+    color: var(--text-color);
     font-weight: 700;
 }
 
@@ -126,7 +126,7 @@
 
 .price-range-info {
     font-size: 0.95rem;
-    color: #c0c0c0;
+    color: var(--legend-color);
 }
 
 .price-gauge-wrapper {
@@ -170,8 +170,8 @@
 }
 
 .gauge-handle-label {
-    background-color: #5a8eec;
-    color: white;
+    background-color: var(--primary-button-bg);
+    color: var(--primary-button-text);
     padding: 5px 12px;
     border-radius: 16px;
     font-size: 0.9rem;
@@ -187,7 +187,7 @@
     position: absolute;
     top: 32px;
     width: 100%;
-    color: #c0c0c0;
+    color: var(--legend-color);
     font-size: 0.85rem;
     font-weight: 700;
 }
@@ -227,7 +227,7 @@
     width: 20px;
     height: 20px;
     background-color: white;
-    border: 5px solid #5a8eec;
+    border: 5px solid var(--primary-button-bg);
     border-radius: 50%;
     margin: 0 auto;
 }
@@ -239,7 +239,7 @@
 }
 
 .gauge-labels span {
-    color: #c0c0c0;
+    color: var(--legend-color);
     font-size: 0.9rem;
 }
 
@@ -251,7 +251,7 @@
 .subscription-form-container,
 .book-now-container {
     padding: 1.25rem;
-    background-color: rgba(90, 142, 236, 0.1);
+    background-color: rgba(var(--primary-button-bg-rgb), 0.1);
     border-radius: 8px;
     text-align: center;
 }
@@ -278,9 +278,9 @@
     box-sizing: border-box;
     flex-grow: 1;
     width: 60px;
-    background: #3a3a3a;
-    border-color: #777;
-    color: white;
+    background: var(--input-background);
+    border-color: var(--input-border);
+    color: var(--input-text);
     padding: 0.75rem;
     border-radius: 6px;
     border: 1px solid;
@@ -304,7 +304,7 @@
 
 .book-now-button {
     display: block;
-    background-color: #8e44ad;
+    background-color: var(--book-now-bg);
 }
 
 .action-button:hover:not(:disabled) {
@@ -312,7 +312,7 @@
 }
 
 .action-button:disabled {
-    background-color: #555;
+    background-color: var(--secondary-button-bg);
     cursor: not-allowed;
     filter: brightness(1);
 }
@@ -350,7 +350,8 @@
 }
 
 .subscription-feedback.success {
-    color: #92e6a7;
+    color: var(--inline-success-color);
+    font-weight: 600;
 }
 
 @media (max-width: 950px) {

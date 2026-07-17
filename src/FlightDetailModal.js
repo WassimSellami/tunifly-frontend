@@ -75,7 +75,7 @@ const PriceGauge = ({ current, analytics }) => {
 };
 
 
-const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscriptions = [], setUserSubscriptions }) => {
+const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSubscriptions = [], setUserSubscriptions }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [targetPrice, setTargetPrice] = useState('');
@@ -87,6 +87,9 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
         () => userSubscriptions.find(subscription => subscription.flightId === flight?.id),
         [flight?.id, userSubscriptions]
     );
+    const isDarkTheme = theme === 'dark';
+    const chartTickColor = isDarkTheme ? '#909090' : '#666666';
+    const chartGridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)';
 
     const priceAnalytics = useMemo(() => {
         if (history.length < 2) return null;
@@ -205,7 +208,7 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
             plugins: {
                 legend: { display: false }, datalabels: { display: false },
                 tooltip: {
-                    enabled: true, backgroundColor: '#5a8eec', padding: 12, cornerRadius: 16,
+                    enabled: true, backgroundColor: isDarkTheme ? '#5a8eec' : '#007bff', padding: 12, cornerRadius: 16,
                     displayColors: false, yAlign: 'bottom', caretPadding: 15,
                     xAlign: (context) => (context.tooltip.x + context.tooltip.width / 2 > context.chart.width) ? 'right' : 'left',
                     callbacks: {
@@ -220,28 +223,28 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                 x: {
                     type: 'time',
                     time: { unit: 'day' },
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    grid: { color: chartGridColor },
                     ticks: {
                         display: !isSmallScreen,
                         autoSkip: true,
                         maxTicksLimit: 6,
                         maxRotation: 45,
                         minRotation: 45,
-                        color: '#909090',
+                        color: chartTickColor,
                         callback: (val) => `${differenceInDays(new Date(), new Date(val))} days ago`,
                     },
                     min: xMin,
                     max: xMax,
                 },
                 y: {
-                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#909090', stepSize: stepSize, callback: (val) => `€${val}` },
+                    grid: { color: chartGridColor },
+                    ticks: { color: chartTickColor, stepSize: stepSize, callback: (val) => `€${val}` },
                     min: yMin,
                     max: yMax,
                 }
             }
         };
-    }, [priceAnalytics, history, isSmallScreen, flight.priceEur, currentPriceTimestamp]);
+    }, [priceAnalytics, history, isSmallScreen, flight.priceEur, currentPriceTimestamp, isDarkTheme, chartGridColor, chartTickColor]);
 
     if (!flight) return null;
 

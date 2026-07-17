@@ -28,7 +28,7 @@ ChartJS.register(
     ChartDataLabels
 );
 
-const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscriptionsLoading, subscriptionsError, setUserSubscriptions }) => {
+const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, subscriptionsLoading, subscriptionsError, setUserSubscriptions }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
@@ -621,6 +621,7 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
             {noFlightsMessage}
             {searchResults && Object.keys(searchResults).length > 0 ? (
                 <FlightResultsDisplay
+                    theme={theme}
                     groupedFlights={searchResults}
                     airlines={allAirlines}
                     userEmail={userEmail}
@@ -631,6 +632,7 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
             ) : null}
             {isModalOpen && selectedFlightFromSubscription && (
                 <FlightDetailModal
+                    theme={theme}
                     flight={selectedFlightFromSubscription}
                     onClose={() => setIsModalOpen(false)}
                     airlines={allAirlines}
