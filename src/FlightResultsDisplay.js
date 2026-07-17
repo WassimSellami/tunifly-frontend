@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { Bar } from 'react-chartjs-2';
 import FlightDetailModal from './FlightDetailModal';
 import { fetchAirports } from './api';
@@ -32,16 +32,21 @@ const airlineIconSources = {
     BJ: bjLogo,
 };
 
+const getFlightsPerPage = () => {
+    if (window.innerWidth <= 640) return 4;
+    if (window.innerWidth <= 900) return 6;
+    return 9;
+};
+
 const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscriptions, setUserSubscriptions, enableEmailNotifications }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedFlight, setSelectedFlight] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
     const [chartPages, setChartPages] = useState({});
     const [loadedIcons, setLoadedIcons] = useState({});
-
-    const FLIGHTS_PER_PAGE = 9;
-    const LOGO_WIDTH = 55;
-    const LOGO_HEIGHT = 34;
+    const [flightsPerPage, setFlightsPerPage] = useState(getFlightsPerPage);
+    const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 640);
+    const loadedIconCount = Object.keys(loadedIcons).length;
 
     const chartTitleColor = '#FFFFFF';
     const axisTitleColor = '#CCCCCC';
@@ -100,12 +105,21 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
     }, []);
 
     useEffect(() => {
+        const handleResize = () => {
+            setFlightsPerPage(getFlightsPerPage());
+            setIsSmallScreen(window.innerWidth <= 640);
+        };
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
         const initialPages = {};
         Object.keys(groupedFlights).forEach(route => {
             initialPages[route] = 0;
         });
         setChartPages(initialPages);
-    }, [groupedFlights]);
+    }, [groupedFlights, flightsPerPage]);
 
     const handleFlightClick = (flight) => {
         setSelectedFlight(flight);
@@ -132,9 +146,9 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                         const sortedFlights = [...flightsForRoute].sort((a, b) => new Date(a.departureDate) - new Date(b.departureDate));
 
                         const currentPage = chartPages[route] || 0;
-                        const totalPages = Math.ceil(sortedFlights.length / FLIGHTS_PER_PAGE);
-                        const startIndex = currentPage * FLIGHTS_PER_PAGE;
-                        const paginatedFlights = sortedFlights.slice(startIndex, startIndex + FLIGHTS_PER_PAGE);
+                        const totalPages = Math.ceil(sortedFlights.length / flightsPerPage);
+                        const startIndex = currentPage * flightsPerPage;
+                        const paginatedFlights = sortedFlights.slice(startIndex, startIndex + flightsPerPage);
 
                         const labels = paginatedFlights.map(f => f.departureDate.split('T')[0]);
                         const prices = paginatedFlights.map(f => f.priceEur);
@@ -158,9 +172,11 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                     const icon = loadedIcons[code];
 
                                     if (icon) {
-                                        const x = element.x - (LOGO_WIDTH / 2);
+                                        const logoWidth = element.width * 0.9;
+                                        const logoHeight = logoWidth * (icon.height / icon.width);
+                                        const x = element.x - (logoWidth / 2);
                                         const y = element.y + 2;
-                                        ctx.drawImage(icon, x, y, LOGO_WIDTH, LOGO_HEIGHT);
+                                        ctx.drawImage(icon, x, y, logoWidth, logoHeight);
                                     }
                                 });
                                 ctx.restore();
@@ -180,18 +196,23 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                     display: true,
                                     labels: {
                                         currentPrice: {
+                                            display: true,
                                             anchor: 'center',
                                             align: 'center',
                                             offset: 30,
                                             color: 'white',
-                                            font: { weight: 'bold', size: 18 },
+                                            font: { weight: 'bold', size: isSmallScreen ? 12 : 18 },
                                             formatter: (value, context) => {
                                                 const flight = paginatedFlights[context.dataIndex];
                                                 const isSubscribed = userSubscriptions.some(sub => sub.flightId === flight.id);
-                                                return `€${value.toFixed(2)} ${isSubscribed ? '★' : ''}`;
+                                                if (isSmallScreen) {
+                                                    return `€ ${value.toFixed(0)}${isSubscribed ? ' ★' : ''}`;
+                                                }
+                                                return `€${value.toFixed(0)} ${isSubscribed ? '★' : ''}`;
                                             }
                                         },
                                         minPrice: {
+                                            display: true,
                                             align: 'center',
                                             anchor: 'start',
                                             offset: 4,
@@ -199,13 +220,14 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                             font: { weight: 'bold', size: 14 },
                                             formatter: (value, context) => {
                                                 const flight = paginatedFlights[context.dataIndex];
-                                                return flight.minPrice !== null ? `Min: ${flight.minPrice.toFixed(2)}` : '';
+                                                return flight.minPrice !== null ? `€ ${flight.minPrice.toFixed(0)}` : '';
                                             },
                                             padding: { top: 2, bottom: 2, left: 4, right: 4 },
                                             backgroundColor: labelBackgroundColor,
                                             borderRadius: 4,
                                         },
                                         maxPrice: {
+                                            display: true,
                                             align: 'center',
                                             anchor: 'end',
                                             offset: 4,
@@ -213,7 +235,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                             font: { weight: 'bold', size: 14 },
                                             formatter: (value, context) => {
                                                 const flight = paginatedFlights[context.dataIndex];
-                                                return flight.maxPrice !== null ? `Max: ${flight.maxPrice.toFixed(2)}` : '';
+                                                return flight.maxPrice !== null ? `€ ${flight.maxPrice.toFixed(0)}` : '';
                                             },
                                             padding: { top: 2, bottom: 2, left: 4, right: 4 },
                                             backgroundColor: labelBackgroundColor,
@@ -255,10 +277,10 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                                         label: (context) => {
                                             const flight = paginatedFlights[context.dataIndex];
                                             const isSubscribed = userSubscriptions.some(sub => sub.flightId === flight.id);
-                                            let tooltipText = `Price: €${context.parsed.y.toFixed(2)}`;
+                                            let tooltipText = `Price: €${context.parsed.y.toFixed(0)}`;
                                             if (isSubscribed) tooltipText += ' ★';
-                                            if (flight?.minPrice != null) tooltipText += `\nHistorical Min: €${flight.minPrice.toFixed(2)}`;
-                                            if (flight?.maxPrice != null) tooltipText += `\nHistorical Max: €${flight.maxPrice.toFixed(2)}`;
+                                            if (flight?.minPrice != null) tooltipText += `\nHistorical Min: €${flight.minPrice.toFixed(0)}`;
+                                            if (flight?.maxPrice != null) tooltipText += `\nHistorical Max: €${flight.maxPrice.toFixed(0)}`;
                                             return tooltipText;
                                         }
                                     }
@@ -290,7 +312,7 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
                             <div key={route} className="chart-card">
                                 <div style={{ height: '400px', cursor: 'pointer' }}>
                                     {paginatedFlights.length > 0 ? (
-                                        <Bar data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
+                                        <Bar key={`${route}-${loadedIconCount}`} data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
                                     ) : (
                                         <p className="info-message">No flight data to display for this route.</p>
                                     )}
@@ -327,4 +349,4 @@ const FlightResultsDisplay = ({ groupedFlights, airlines, userEmail, userSubscri
     );
 };
 
-export default FlightResultsDisplay;
+export default memo(FlightResultsDisplay);

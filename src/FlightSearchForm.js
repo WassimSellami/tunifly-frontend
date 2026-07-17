@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, updateUserEmailNotificationSetting, fetchFlightById, fetchSubscriptionsByEmail, fetchUserByEmail, createUser } from './api';
 import { isBefore, addDays, format, differenceInDays, addMonths, startOfDay } from 'date-fns';
 import FlightResultsDisplay from './FlightResultsDisplay';
@@ -38,8 +38,8 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
     const [germanAirports, setGermanAirports] = useState([]);
     const [selectedDepartureAirportCodes, setSelectedDepartureAirportCodes] = useState([]);
     const [selectedArrivalAirportCodes, setSelectedArrivalAirportCodes] = useState([]);
-    const minSelectableDate = startOfDay(new Date());
-    const maxSelectableDate = addMonths(minSelectableDate, 3);
+    const minSelectableDate = useMemo(() => startOfDay(new Date()), []);
+    const maxSelectableDate = useMemo(() => addMonths(minSelectableDate, 3), [minSelectableDate]);
     const initialStartDays = 0;
     const initialEndDays = differenceInDays(addMonths(minSelectableDate, 1), minSelectableDate);
     const [dateRangeSliderValues, setDateRangeSliderValues] = useState([initialStartDays, initialEndDays]);
@@ -70,6 +70,11 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
         const airport = allAirports.find(a => a.code === code);
         return airport ? `${capitalizeWords(airport.name)} (${code})` : code;
     }, [allAirports, capitalizeWords]);
+
+    const getAirlineDisplayName = useCallback((code) => {
+        const airline = allAirlines.find(a => a.code === code);
+        return airline ? `${capitalizeWords(airline.name)} (${code})` : code;
+    }, [allAirlines, capitalizeWords]);
 
     const handleEmailBlur = useCallback(async () => {
         if (!userEmail || !userEmail.includes('@') || !userEmail.includes('.')) {
@@ -449,8 +454,9 @@ const FlightSearchForm = ({ userEmail, setUserEmail, userSubscriptions, subscrip
                                                             on {format(new Date(sub.flightDepartureDate), 'dd MMM')}
                                                         </span>
                                                     )}
+                                                    <span className="sub-airline">{getAirlineDisplayName(sub.flightAirlineCode)}</span>
                                                 </span>
-                                                <span className="sub-price">Target: {sub.targetPrice.toFixed(2)}€</span>
+                                                <span className="sub-price">Target: {sub.targetPrice.toFixed(0)}€</span>
                                                 <button
                                                     type="button"
                                                     className="delete-sub-button"

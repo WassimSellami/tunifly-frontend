@@ -421,11 +421,11 @@ textarea:focus,
   height: 24px !important;
   margin-top: -8px !important;
   box-shadow: 0 0 0 4px rgba(var(--primary-button-bg-rgb), 0.3) !important;
-  transition: all 0.2s ease-in-out;
+  transition: box-shadow 0.15s ease-in-out !important;
+  touch-action: pan-y;
 }
 
 .rc-slider-handle:hover {
-  transform: translateY(-2px);
   box-shadow: 0 0 0 6px rgba(var(--primary-button-bg-rgb), 0.5) !important;
 }
 
@@ -557,6 +557,11 @@ textarea:focus,
   font-size: 0.9em;
   color: var(--legend-color);
   margin-left: 0.5rem;
+}
+
+.sub-airline {
+  font-size: 0.9em;
+  color: var(--legend-color);
 }
 
 .sub-price {
@@ -792,4 +797,155 @@ textarea:focus,
   font-size: 1em;
   color: var(--legend-color);
   font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .App {
+    padding: 1rem 0;
+  }
+
+  .main-content {
+    width: 96%;
+    padding: 1.25rem;
+  }
+
+  h1 {
+    font-size: 2.1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.7rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  fieldset {
+    padding: 1.25rem;
+  }
+
+  .airport-selection-grid {
+    gap: 1rem;
+  }
+
+  .chart-card {
+    margin-bottom: 2.5rem;
+  }
+
+  .chart-card > div {
+    height: 350px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .main-content {
+    width: 100%;
+    padding: 0.75rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1.35rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  fieldset {
+    padding: 1rem 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  legend {
+    font-size: 1rem;
+  }
+
+  .input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .input-group .text-input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .button-group,
+  .button-group-vertical {
+    gap: 0.5rem;
+  }
+
+  .button-group .airline-button,
+  .button-group-vertical .airport-button {
+    width: 100%;
+  }
+
+  .direction-switch-button {
+    width: 52px;
+    height: 52px;
+    font-size: 1.6rem;
+  }
+
+  .date-range-slider-container {
+    width: 96%;
+  }
+
+  .selected-date-display {
+    font-size: 0.9rem;
+    gap: 0.75rem;
+  }
+
+  .rc-slider-mark-text {
+    font-size: 0.65rem !important;
+  }
+
+  .submit-button {
+    max-width: none;
+    margin-top: 1rem;
+  }
+
+  .user-subscriptions-list li {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: start;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+
+  .subscription-details {
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    min-width: 0;
+  }
+
+  .sub-date {
+    margin-left: 0;
+  }
+
+  .sub-price {
+    grid-column: 2 / 3;
+    margin-left: 0;
+  }
+
+  .delete-sub-button {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    margin-left: 0;
+  }
+
+  .chart-card > div {
+    height: 310px !important;
+  }
+
+  .chart-navigation {
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .chart-navigation span {
+    font-size: 0.9rem;
+  }
 }

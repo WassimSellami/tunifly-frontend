@@ -1,5 +1,18 @@
 const BASE_URL = 'https://tunifly-backend-d67d3.ondigitalocean.app';
 
+export const ping = async () => {
+    try {
+        const response = await fetch(`${BASE_URL}/ping`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error pinging API:', error);
+        throw error;
+    }
+};
+
 export const fetchAirlines = async () => {
     try {
         const response = await fetch(`${BASE_URL}/airlines/`);
@@ -42,6 +55,12 @@ export const searchFlights = async (searchParams) => {
     }
     if (searchParams.airlineCodes && searchParams.airlineCodes.length > 0) {
         searchParams.airlineCodes.forEach(code => params.append('airlineCodes', code));
+    }
+    if (searchParams.limit !== undefined) {
+        params.append('limit', searchParams.limit);
+    }
+    if (searchParams.offset !== undefined) {
+        params.append('offset', searchParams.offset);
     }
 
     const queryString = params.toString();
@@ -183,8 +202,10 @@ export const fetchSubscriptionByFlightAndEmail = async (flightId, email) => {
 export const createSubscription = async (subscriptionData) => {
     try {
         const payload = {
-            ...subscriptionData,
-            enableEmailNotifications: subscriptionData.enableEmailNotifications !== undefined ? subscriptionData.enableEmailNotifications : true
+            flightId: subscriptionData.flightId,
+            email: subscriptionData.email,
+            targetPrice: subscriptionData.targetPrice,
+            ...(subscriptionData.isActive !== undefined && { isActive: subscriptionData.isActive }),
         };
 
         const response = await fetch(`${BASE_URL}/subscriptions/`, {
@@ -208,10 +229,15 @@ export const createSubscription = async (subscriptionData) => {
 
 export const updateSubscription = async (subscriptionId, subscriptionData) => {
     try {
-        const payload = {
-            ...subscriptionData,
-            enableEmailNotifications: subscriptionData.enableEmailNotifications !== undefined ? subscriptionData.enableEmailNotifications : true
-        };
+        const payload = Object.fromEntries(
+            Object.entries({
+                flightId: subscriptionData.flightId,
+                email: subscriptionData.email,
+                targetPrice: subscriptionData.targetPrice,
+                isActive: subscriptionData.isActive,
+                enableEmailNotifications: subscriptionData.enableEmailNotifications,
+            }).filter(([, value]) => value !== undefined)
+        );
 
         const response = await fetch(`${BASE_URL}/subscriptions/${subscriptionId}`, {
             method: 'PUT',
@@ -242,7 +268,7 @@ export const deleteSubscription = async (subscriptionId) => {
             const errorData = await response.json();
             throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
-        return { success: true, message: `Subscription ${subscriptionId} deleted.` };
+        return await response.json();
     } catch (error) {
         console.error(`Error deleting subscription ${subscriptionId}:`, error);
         throw error;

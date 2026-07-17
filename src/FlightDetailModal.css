@@ -273,6 +273,21 @@
     filter: brightness(1);
 }
 
+.subscription-email-prompt,
+.subscription-feedback {
+    margin: 0.75rem 0 0;
+    font-size: 0.9rem;
+}
+
+.subscription-email-prompt,
+.subscription-feedback.error {
+    color: #ff9b9b;
+}
+
+.subscription-feedback.success {
+    color: #92e6a7;
+}
+
 @media (max-width: 950px) {
     .modal-content {
         grid-template-columns: 1fr;
@@ -282,5 +297,71 @@
 
     .modal-column-left {
         min-height: 400px;
+    }
+}
+
+@media (max-width: 640px) {
+    .modal-overlay {
+        align-items: stretch;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .modal-close-button {
+        top: 0.5rem;
+        right: 0.75rem;
+        font-size: 2rem;
+    }
+
+    .modal-column-left {
+        min-height: 0;
+    }
+
+    .modal-chart-container {
+        min-height: 280px;
+    }
+
+    .modal-top-info {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .airline-logo {
+        height: 45px;
+    }
+
+    .flight-date {
+        font-size: 0.95rem;
+    }
+
+    .price-analysis-header {
+        font-size: 1.3rem;
+    }
+
+    .gauge-handle-label {
+        max-width: 150px;
+        white-space: normal;
+        font-size: 0.8rem;
+    }
+
+    .subscription-form-container,
+    .book-now-container {
+        padding: 1rem;
+    }
+
+    .form-group {
+        flex-direction: column;
+    }
+
+    .target-price-input,
+    .form-group .action-button {
+        width: 100%;
     }
 }

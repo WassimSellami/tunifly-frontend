@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
-import { fetchPriceHistory } from './api';
+import { createSubscription, fetchPriceHistory, updateSubscription } from './api';
 import './FlightDetailModal.css';
 
 import tuLogo from './assets/tu_logo.png';
@@ -60,7 +60,7 @@ const PriceGauge = ({ current, analytics }) => {
                 <div className="gauge-bar-high" style={{ width: `${highWidth}%` }}></div>
             </div>
             <div className="gauge-handle" style={{ left: `${clampedPosition}%` }}>
-                <div className="gauge-handle-label">{`€${current.toFixed(2)} is ${status}`}</div>
+                <div className="gauge-handle-label">{`€${current.toFixed(0)} is ${status}`}</div>
                 <div className="gauge-handle-dot"></div>
             </div>
             <div className="gauge-labels">
@@ -72,11 +72,16 @@ const PriceGauge = ({ current, analytics }) => {
 };
 
 
-const FlightDetailModal = ({ flight, onClose, airlines, userEmail }) => {
+const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscriptions = [], setUserSubscriptions }) => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [targetPrice, setTargetPrice] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [subscriptionFeedback, setSubscriptionFeedback] = useState(null);
+    const currentSubscription = useMemo(
+        () => userSubscriptions.find(subscription => subscription.flightId === flight?.id),
+        [flight?.id, userSubscriptions]
+    );
 
     const priceAnalytics = useMemo(() => {
         if (history.length < 2) return null;
@@ -124,6 +129,40 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail }) => {
         loadModalData();
     }, [flight]);
 
+    useEffect(() => {
+        setTargetPrice(currentSubscription ? currentSubscription.targetPrice.toFixed(0) : '');
+    }, [flight?.id, currentSubscription]);
+
+    useEffect(() => {
+        setSubscriptionFeedback(null);
+    }, [flight?.id]);
+
+    const handleSetAlert = async () => {
+        const parsedTargetPrice = Number(targetPrice);
+        if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
+            setSubscriptionFeedback({ type: 'error', text: 'Enter a target price greater than zero.' });
+            return;
+        }
+
+        setSubmitting(true);
+        setSubscriptionFeedback(null);
+        try {
+            const savedSubscription = currentSubscription
+                ? await updateSubscription(currentSubscription.id, { targetPrice: parsedTargetPrice, isActive: true })
+                : await createSubscription({ flightId: flight.id, email: userEmail, targetPrice: parsedTargetPrice, isActive: true });
+
+            setUserSubscriptions?.(previousSubscriptions => {
+                const withoutCurrentFlight = previousSubscriptions.filter(subscription => subscription.flightId !== flight.id);
+                return [...withoutCurrentFlight, savedSubscription];
+            });
+        } catch (error) {
+            console.error('Failed to save subscription:', error);
+            setSubscriptionFeedback({ type: 'error', text: error.message || 'Could not save your price alert.' });
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     const chartOptions = useMemo(() => {
         if (!priceAnalytics || history.length === 0) return {};
 
@@ -156,7 +195,7 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail }) => {
                     enabled: true, backgroundColor: '#5a8eec', padding: 12, cornerRadius: 16,
                     displayColors: false, yAlign: 'bottom', caretPadding: 15,
                     xAlign: (context) => (context.tooltip.x + context.tooltip.width / 2 > context.chart.width) ? 'right' : 'left',
-                    callbacks: { title: () => '', label: (context) => `${differenceInDays(new Date(), new Date(context.parsed.x))} days ago - €${context.parsed.y.toFixed(2)}` }
+                    callbacks: { title: () => '', label: (context) => `${differenceInDays(new Date(), new Date(context.parsed.x))} days ago - €${context.parsed.y.toFixed(0)}` }
                 }
             },
             scales: {
@@ -225,9 +264,27 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail }) => {
                         <div className="subscription-form-container">
                             <h3>Track this Flight</h3>
                             <div className="form-group">
-                                <input type="number" placeholder="Target Price" value={targetPrice} onChange={e => setTargetPrice(e.target.value)} className="target-price-input" disabled={submitting || !userEmail} />
-                                <button type="button" className="action-button" disabled={submitting || !userEmail}>Set Alert</button>
+                                <input
+                                    type="number"
+                                    placeholder={currentSubscription ? `Current alert: €${currentSubscription.targetPrice.toFixed(0)}` : 'Target Price'}
+                                    value={targetPrice}
+                                    onChange={e => setTargetPrice(e.target.value)}
+                                    className="target-price-input"
+                                    disabled={submitting || !userEmail}
+                                />
+                                <button type="button" className="action-button" onClick={handleSetAlert} disabled={submitting || !userEmail}>
+                                    {submitting ? 'Saving...' : currentSubscription ? 'Update Alert' : 'Set Alert'}
+                                </button>
                             </div>
+                            {!userEmail && (
+                                <p className="subscription-email-prompt">Enter your email first to track this flight.</p>
+                            )}
+                            {currentSubscription && (
+                                <p className="subscription-feedback success">You are already tracking this flight. Update the target price if needed.</p>
+                            )}
+                            {subscriptionFeedback && (
+                                <p className={`subscription-feedback ${subscriptionFeedback.type}`}>{subscriptionFeedback.text}</p>
+                            )}
                         </div>
                         <div className="book-now-container">
                             <h3>Ready to Book?</h3>
