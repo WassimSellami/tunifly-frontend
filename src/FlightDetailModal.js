@@ -37,7 +37,7 @@ const AirlineDisplay = ({ code, name }) => {
 
 const PriceGauge = ({ current, analytics }) => {
     if (!analytics) return null;
-    const { gaugeMin, gaugeMax, lowThreshold, highThreshold, status } = analytics;
+    const { gaugeMin, gaugeMax, minPrice, maxPrice, lowThreshold, highThreshold, status } = analytics;
     const gaugeRange = gaugeMax - gaugeMin;
 
     if (gaugeRange <= 0) return null;
@@ -46,26 +46,29 @@ const PriceGauge = ({ current, analytics }) => {
     const avgWidth = 50;
     const highWidth = 25;
 
-    const lowLabelPosition = 25;
-    const highLabelPosition = 75;
-
     const position = ((current - gaugeMin) / gaugeRange) * 100;
     const clampedPosition = Math.max(3, Math.min(97, position));
 
     return (
         <div className="price-gauge-container">
+            <div className="gauge-range-labels">
+                <span className="gauge-min-label">Min</span>
+                <span className="gauge-max-label">Max</span>
+            </div>
             <div className="gauge-track">
                 <div className="gauge-bar-low" style={{ width: `${lowWidth}%` }}></div>
                 <div className="gauge-bar-avg" style={{ width: `${avgWidth}%` }}></div>
                 <div className="gauge-bar-high" style={{ width: `${highWidth}%` }}></div>
             </div>
             <div className="gauge-handle" style={{ left: `${clampedPosition}%` }}>
-                <div className="gauge-handle-label">{`€${current.toFixed(0)} is ${status}`}</div>
+                <div className="gauge-handle-label">€{current.toFixed(0)} is {status}</div>
                 <div className="gauge-handle-dot"></div>
             </div>
             <div className="gauge-labels">
-                <span style={{ left: `${lowLabelPosition}%` }}>€{lowThreshold.toFixed(0)}</span>
-                <span style={{ left: `${highLabelPosition}%` }}>€{highThreshold.toFixed(0)}</span>
+                <span className="gauge-min-price">€{minPrice.toFixed(0)}</span>
+                <span className="gauge-usual-low-price">€{lowThreshold.toFixed(0)}</span>
+                <span className="gauge-usual-high-price">€{highThreshold.toFixed(0)}</span>
+                <span className="gauge-max-price">€{maxPrice.toFixed(0)}</span>
             </div>
         </div>
     );
@@ -78,6 +81,8 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
     const [targetPrice, setTargetPrice] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [subscriptionFeedback, setSubscriptionFeedback] = useState(null);
+    const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 640);
+    const currentPriceTimestamp = useMemo(() => new Date(), [flight?.id, flight?.priceEur]);
     const currentSubscription = useMemo(
         () => userSubscriptions.find(subscription => subscription.flightId === flight?.id),
         [flight?.id, userSubscriptions]
@@ -134,6 +139,12 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
     }, [flight?.id, currentSubscription]);
 
     useEffect(() => {
+        const handleResize = () => setIsSmallScreen(window.innerWidth <= 640);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    useEffect(() => {
         setSubscriptionFeedback(null);
     }, [flight?.id]);
 
@@ -166,7 +177,7 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
     const chartOptions = useMemo(() => {
         if (!priceAnalytics || history.length === 0) return {};
 
-        const timestamps = history.map(h => parseISO(h.timestamp).getTime());
+        const timestamps = [...history.map(h => parseISO(h.timestamp).getTime()), currentPriceTimestamp.getTime()];
         const minTimestamp = Math.min(...timestamps);
         const maxTimestamp = Math.max(...timestamps);
 
@@ -182,10 +193,12 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
         const xMax = maxTimestamp + endPaddingMs;
 
         const { minPrice, maxPrice } = priceAnalytics;
-        const range = maxPrice - minPrice;
+        const chartMinPrice = Math.min(minPrice, flight.priceEur);
+        const chartMaxPrice = Math.max(maxPrice, flight.priceEur);
+        const range = chartMaxPrice - chartMinPrice;
         const stepSize = range > 100 ? 25 : (range > 50 ? 10 : 5);
-        const yMin = Math.floor(minPrice / stepSize) * stepSize - stepSize / 2;
-        const yMax = Math.ceil(maxPrice / stepSize) * stepSize + stepSize / 2;
+        const yMin = Math.floor(chartMinPrice / stepSize) * stepSize - stepSize / 2;
+        const yMax = Math.ceil(chartMaxPrice / stepSize) * stepSize + stepSize / 2;
 
         return {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -195,7 +208,12 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                     enabled: true, backgroundColor: '#5a8eec', padding: 12, cornerRadius: 16,
                     displayColors: false, yAlign: 'bottom', caretPadding: 15,
                     xAlign: (context) => (context.tooltip.x + context.tooltip.width / 2 > context.chart.width) ? 'right' : 'left',
-                    callbacks: { title: () => '', label: (context) => `${differenceInDays(new Date(), new Date(context.parsed.x))} days ago - €${context.parsed.y.toFixed(0)}` }
+                    callbacks: {
+                        title: () => '',
+                        label: (context) => context.dataset.label === 'Current Price'
+                            ? `Current price - €${context.parsed.y.toFixed(0)}`
+                            : `${differenceInDays(new Date(), new Date(context.parsed.x))} days ago - €${context.parsed.y.toFixed(0)}`
+                    }
                 }
             },
             scales: {
@@ -203,7 +221,15 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                     type: 'time',
                     time: { unit: 'day' },
                     grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                    ticks: { color: '#909090', callback: (val) => `${differenceInDays(new Date(), new Date(val))} days ago` },
+                    ticks: {
+                        display: !isSmallScreen,
+                        autoSkip: true,
+                        maxTicksLimit: 6,
+                        maxRotation: 45,
+                        minRotation: 45,
+                        color: '#909090',
+                        callback: (val) => `${differenceInDays(new Date(), new Date(val))} days ago`,
+                    },
                     min: xMin,
                     max: xMax,
                 },
@@ -215,13 +241,11 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                 }
             }
         };
-    }, [priceAnalytics, history]);
+    }, [priceAnalytics, history, isSmallScreen, flight.priceEur, currentPriceTimestamp]);
 
     if (!flight) return null;
 
     const airline = airlines.find(a => a.code === flight.airlineCode);
-    const historicalMinPrice = flight.minPrice ?? priceAnalytics?.minPrice;
-    const historicalMaxPrice = flight.maxPrice ?? priceAnalytics?.maxPrice;
     const departureDateFormatted = format(parseISO(flight.departureDate), 'EEE, dd MMM yyyy');
     const chartData = {
         datasets: [{
@@ -229,6 +253,21 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
             borderColor: '#88aaff', backgroundColor: 'rgba(136, 170, 255, 0.15)',
             fill: true, tension: 0.1, pointRadius: 0, pointHoverRadius: 6,
             pointHoverBackgroundColor: '#88aaff', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2
+        }, {
+            label: 'Current Price', data: [{ x: currentPriceTimestamp, y: flight.priceEur }],
+            showLine: false, pointRadius: 7, pointHoverRadius: 9,
+            pointBackgroundColor: '#5a8eec', pointBorderColor: '#fff', pointBorderWidth: 3,
+            datalabels: {
+                display: true,
+                align: 'top',
+                anchor: 'end',
+                backgroundColor: '#5a8eec',
+                borderRadius: 10,
+                color: '#fff',
+                font: { weight: 'bold' },
+                padding: { top: 4, right: 8, bottom: 4, left: 8 },
+                formatter: (value) => `€${value.y.toFixed(0)}`
+            }
         }]
     };
 
@@ -256,11 +295,6 @@ const FlightDetailModal = ({ flight, onClose, airlines, userEmail, userSubscript
                         <p className="price-range-info">
                             Similar trips usually cost between €{priceAnalytics?.lowThreshold.toFixed(0)}–€{priceAnalytics?.highThreshold.toFixed(0)}.
                         </p>
-                        {historicalMinPrice != null && historicalMaxPrice != null && (
-                            <p className="price-range-info">
-                                Historical minimum: €{historicalMinPrice.toFixed(0)} · maximum: €{historicalMaxPrice.toFixed(0)}.
-                            </p>
-                        )}
                     </div>
 
                     <div className="price-gauge-wrapper">

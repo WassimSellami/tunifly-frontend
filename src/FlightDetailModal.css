@@ -136,12 +136,12 @@
 .price-gauge-container {
     position: relative;
     width: 100%;
-    height: 50px;
-    padding-top: 30px;
+    height: 105px;
 }
 
 .gauge-track {
     position: absolute;
+    top: 60px;
     width: 100%;
     height: 8px;
     border-radius: 4px;
@@ -163,7 +163,7 @@
 
 .gauge-handle {
     position: absolute;
-    bottom: 18px;
+    top: 54px;
     transform: translateX(-50%);
     text-align: center;
     transition: left 0.4s ease-out;
@@ -177,7 +177,50 @@
     font-size: 0.9rem;
     font-weight: bold;
     white-space: nowrap;
-    margin-bottom: 8px;
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.gauge-range-labels {
+    position: absolute;
+    top: 32px;
+    width: 100%;
+    color: #c0c0c0;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.gauge-min-label,
+.gauge-max-label,
+.gauge-min-price,
+.gauge-max-price {
+    position: absolute;
+}
+
+.gauge-min-label,
+.gauge-min-price {
+    left: 0;
+}
+
+.gauge-max-label,
+.gauge-max-price {
+    right: 0;
+}
+
+.gauge-usual-low-price,
+.gauge-usual-high-price {
+    position: absolute;
+    transform: translateX(-50%);
+}
+
+.gauge-usual-low-price {
+    left: 25%;
+}
+
+.gauge-usual-high-price {
+    left: 75%;
 }
 
 .gauge-handle-dot {
@@ -190,13 +233,12 @@
 }
 
 .gauge-labels {
-    position: relative;
-    top: 10px;
+    position: absolute;
+    top: 80px;
+    width: 100%;
 }
 
 .gauge-labels span {
-    position: absolute;
-    transform: translateX(-50%);
     color: #c0c0c0;
     font-size: 0.9rem;
 }
@@ -218,7 +260,7 @@
     margin-bottom: 1rem;
 }
 
-.subscription-form h3,
+.subscription-form-container h3,
 .book-now-container h3 {
     margin-top: 0;
     margin-bottom: 1rem;
@@ -233,6 +275,7 @@
 }
 
 .target-price-input {
+    box-sizing: border-box;
     flex-grow: 1;
     width: 60px;
     background: #3a3a3a;
@@ -245,6 +288,7 @@
 }
 
 .action-button {
+    box-sizing: border-box;
     background-color: var(--primary-button-bg, #5a8eec);
     color: white;
     border: none;
@@ -279,6 +323,27 @@
     font-size: 0.9rem;
 }
 
+.gauge-current-price {
+    position: absolute;
+    top: 75px;
+    width: 100%;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.gauge-current-price.low {
+    color: #28a745;
+}
+
+.gauge-current-price.average {
+    color: #ffc107;
+}
+
+.gauge-current-price.high {
+    color: #dc3545;
+}
+
 .subscription-email-prompt,
 .subscription-feedback.error {
     color: #ff9b9b;
@@ -306,11 +371,39 @@
     }
 
     .modal-content {
+        display: flex;
+        flex-direction: column;
         width: 100%;
         max-height: 100vh;
         border-radius: 0;
         padding: 1rem;
         gap: 1.5rem;
+    }
+
+    .modal-column-right {
+        display: contents;
+    }
+
+    .modal-top-info {
+        order: -2;
+    }
+
+    .price-analysis-section {
+        order: -1;
+    }
+
+    .modal-column-left {
+        order: 0;
+        flex: 0 0 auto;
+    }
+
+    .price-gauge-wrapper {
+        order: 1;
+        margin-top: 1.5rem;
+    }
+
+    .modal-actions-panel {
+        order: 2;
     }
 
     .modal-close-button {
@@ -323,8 +416,18 @@
         min-height: 0;
     }
 
+    .price-history-section {
+        flex: 0 0 auto;
+    }
+
     .modal-chart-container {
+        height: 280px;
         min-height: 280px;
+        flex: 0 0 280px;
+    }
+
+    .modal-chart-container canvas {
+        max-height: 280px !important;
     }
 
     .modal-top-info {
@@ -345,15 +448,9 @@
         font-size: 1.3rem;
     }
 
-    .gauge-handle-label {
-        max-width: 150px;
-        white-space: normal;
-        font-size: 0.8rem;
-    }
-
     .subscription-form-container,
     .book-now-container {
-        padding: 1rem;
+        padding: 1.25rem;
     }
 
     .form-group {
