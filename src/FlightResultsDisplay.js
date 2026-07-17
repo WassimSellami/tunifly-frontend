@@ -178,10 +178,12 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                         const arrName = getAirportDisplayName(arrCode);
                         const chartRouteTitle = `${depName} → ${arrName}`;
 
+                        const logoHitAreas = [];
                         const iconPlugin = {
                             id: 'customIcons',
                             afterDatasetsDraw(chart, args, options) {
                                 const { ctx } = chart;
+                                logoHitAreas.length = 0;
                                 ctx.save();
                                 const meta = chart.getDatasetMeta(0);
                                 meta.data.forEach((element, index) => {
@@ -192,9 +194,9 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                                     const icon = loadedIcons[code];
 
                                     if (icon) {
+                                        const logoPadding = 4;
                                         const logoCardWidth = element.width * 0.9;
                                         const logoCardHeight = logoCardWidth * 0.55;
-                                        const logoPadding = 4;
                                         const logoCardX = element.x - (logoCardWidth / 2);
                                         const logoCardY = Math.max(
                                             chart.chartArea.top + logoPadding,
@@ -219,9 +221,26 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                                         );
                                         ctx.fill();
                                         ctx.drawImage(icon, x, y, logoWidth, logoHeight);
+                                        logoHitAreas.push({
+                                            flight,
+                                            left: logoCardX,
+                                            right: logoCardX + logoCardWidth,
+                                            top: logoCardY,
+                                            bottom: logoCardY + logoCardHeight,
+                                        });
                                     }
                                 });
                                 ctx.restore();
+                            },
+                            afterEvent(chart, args) {
+                                if (args.event.type !== 'click') return;
+
+                                const logoHitArea = logoHitAreas.find(({ left, right, top, bottom }) =>
+                                    args.event.x >= left && args.event.x <= right &&
+                                    args.event.y >= top && args.event.y <= bottom
+                                );
+
+                                if (logoHitArea) handleFlightClick(logoHitArea.flight);
                             }
                         };
 
@@ -265,15 +284,15 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                                 paddingTop: 70
                             },
                             onClick: (event, elements) => {
+                                let clickedFlight;
                                 if (elements.length > 0) {
                                     const clickedElement = elements[0];
                                     if (clickedElement.datasetIndex === 0) {
-                                        const clickedFlight = paginatedFlights[clickedElement.index];
-                                        if (clickedFlight) {
-                                            handleFlightClick(clickedFlight);
-                                        }
+                                        clickedFlight = paginatedFlights[clickedElement.index];
                                     }
                                 }
+
+                                if (clickedFlight) handleFlightClick(clickedFlight);
                             },
                             plugins: {
                                 title: {

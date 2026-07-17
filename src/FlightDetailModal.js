@@ -277,7 +277,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={e => e.stopPropagation()}>
-                <button className="modal-close-button" onClick={onClose}>×</button>
+                <button className="modal-close-button" onClick={onClose} aria-label="Close flight details">&times;</button>
                 <div className="modal-column-left">
                     <div className="price-history-section">
                         <h3>Price History for this Search</h3>

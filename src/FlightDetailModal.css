@@ -30,13 +30,19 @@
     position: absolute;
     top: 15px;
     right: 20px;
-    background: none;
-    border: none;
-    color: var(--legend-color);
+    background-color: var(--section-background);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
     font-size: 2.5rem;
     cursor: pointer;
     line-height: 1;
     z-index: 10;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-column-left,
@@ -302,6 +308,12 @@
     width: 100%;
 }
 
+.form-group .action-button {
+    width: auto;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
 .book-now-button {
     display: block;
     background-color: var(--book-now-bg);
@@ -313,6 +325,7 @@
 
 .action-button:disabled {
     background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
     cursor: not-allowed;
     filter: brightness(1);
 }
@@ -346,7 +359,8 @@
 
 .subscription-email-prompt,
 .subscription-feedback.error {
-    color: #ff9b9b;
+    color: var(--inline-error-color);
+    font-weight: 600;
 }
 
 .subscription-feedback.success {
@@ -411,6 +425,8 @@
         top: 0.5rem;
         right: 0.75rem;
         font-size: 2rem;
+        width: 36px;
+        height: 36px;
     }
 
     .modal-column-left {
@@ -435,6 +451,7 @@
         flex-wrap: wrap;
         gap: 0.75rem;
         margin-bottom: 1.5rem;
+        padding-right: 3rem;
     }
 
     .airline-logo {
