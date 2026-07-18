@@ -395,7 +395,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                     <legend>{t('subscription')}</legend>
                     {!user && (
                         <div className="save-user-section">
-                            <p className="email-clarification-text">Sign in to save price alerts and receive notifications.</p>
+                            <p className="email-clarification-text">{t('signInToSaveAlerts')}</p>
                         </div>
                     )}
                     {user && (

@@ -117,7 +117,7 @@ function App() {
         </button>
         <button type="button" className="account-auth-button" onClick={handleAccountAction}>
           {!user && <img src={googleLogo} alt="" className="google-logo" />}
-          {user ? 'Log out' : 'Log in with Google'}
+          {user ? t('logOut') : t('logInWithGoogle')}
         </button>
         {authActionError && <p className="account-auth-error">{authActionError}</p>}
         </div>
