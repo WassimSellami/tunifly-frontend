@@ -54,7 +54,7 @@ function App() {
     setAuthActionError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}` },
     });
     if (error) throw error;
   };
@@ -95,47 +95,47 @@ function App() {
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
-    <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
-      <div className="theme-controls">
-        <div className="language-selector" aria-label={t('language')}>
-          {languages.map(({ code, label, flag }) => (
-            <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
-              <img className="language-flag" src={flag} alt="" aria-hidden="true" /><span className="language-label">{label}</span>
+      <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
+        <div className="theme-controls">
+          <div className="language-selector" aria-label={t('language')}>
+            {languages.map(({ code, label, flag }) => (
+              <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
+                <img className="language-flag" src={flag} alt="" aria-hidden="true" /><span className="language-label">{label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="account-controls">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
+              aria-pressed={theme === 'dark'}
+              aria-label={t('switchMode', { mode: t(theme === 'dark' ? 'lightMode' : 'darkMode') })}
+            >
+              <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
+              {theme === 'dark' ? t('lightMode') : t('darkMode')}
             </button>
-          ))}
+            <button type="button" className="account-auth-button" onClick={handleAccountAction}>
+              {!user && <img src={googleLogo} alt="" className="google-logo" />}
+              {user ? t('logOut') : t('logInWithGoogle')}
+            </button>
+            {authActionError && <p className="account-auth-error">{authActionError}</p>}
+          </div>
         </div>
-        <div className="account-controls">
-        <button
-          type="button"
-          className="theme-toggle"
-          onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
-          aria-pressed={theme === 'dark'}
-          aria-label={t('switchMode', { mode: t(theme === 'dark' ? 'lightMode' : 'darkMode') })}
-        >
-          <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
-          {theme === 'dark' ? t('lightMode') : t('darkMode')}
-        </button>
-        <button type="button" className="account-auth-button" onClick={handleAccountAction}>
-          {!user && <img src={googleLogo} alt="" className="google-logo" />}
-          {user ? t('logOut') : t('logInWithGoogle')}
-        </button>
-        {authActionError && <p className="account-auth-error">{authActionError}</p>}
-        </div>
+        <main className="main-content">
+          <FlightSearchForm
+            theme={theme}
+            user={user}
+            onUserUpdated={setUser}
+            showToast={showToast}
+            userSubscriptions={userSubscriptions}
+            setUserSubscriptions={setUserSubscriptions}
+            subscriptionsLoading={subscriptionsLoading}
+            subscriptionsError={subscriptionsError}
+          />
+        </main>
+        <Toast toast={toast} />
       </div>
-      <main className="main-content">
-        <FlightSearchForm
-          theme={theme}
-          user={user}
-          onUserUpdated={setUser}
-          showToast={showToast}
-          userSubscriptions={userSubscriptions}
-          setUserSubscriptions={setUserSubscriptions}
-          subscriptionsLoading={subscriptionsLoading}
-          subscriptionsError={subscriptionsError}
-        />
-      </main>
-      <Toast toast={toast} />
-    </div>
     </LanguageContext.Provider>
   );
 }
