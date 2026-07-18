@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import FlightSearchForm from './FlightSearchForm';
-import { fetchSubscriptionsByEmail } from './api';
+import { fetchCurrentUser, fetchSubscriptions } from './api';
+import { supabase } from './supabase';
+import googleLogo from './assets/google-g.svg';
+import Toast from './Toast';
 import { LanguageContext, languages, translate } from './i18n';
 import './App.css';
 
@@ -8,19 +11,77 @@ function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
   });
-  const [userEmail, setUserEmail] = useState(() => {
-    return localStorage.getItem('userEmail') || '';
-  });
+  const [user, setUser] = useState(null);
   const [userSubscriptions, setUserSubscriptions] = useState([]);
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [subscriptionsError, setSubscriptionsError] = useState(null);
+  const [authActionError, setAuthActionError] = useState(null);
+  const [toast, setToast] = useState(null);
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
   const selectedLanguage = languages.find(({ code }) => code === language) || languages[0];
   const t = (key, values) => translate(language, key, values);
 
+  const loadAuthenticatedUser = useCallback(async (session) => {
+    if (!session) {
+      setUser(null);
+      setUserSubscriptions([]);
+      return;
+    }
+    setSubscriptionsLoading(true);
+    setSubscriptionsError(null);
+    try {
+      const [currentUser, subscriptions] = await Promise.all([fetchCurrentUser(), fetchSubscriptions()]);
+      setUser({
+        ...currentUser,
+        displayName: session.user.user_metadata?.full_name || session.user.user_metadata?.name || currentUser.email.split('@')[0],
+      });
+      setUserSubscriptions(subscriptions);
+    } catch (error) {
+      setSubscriptionsError('Failed to load your account. Please try signing in again.');
+      console.error('Authenticated user load error:', error);
+    } finally {
+      setSubscriptionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    localStorage.setItem('userEmail', userEmail);
-  }, [userEmail]);
+    supabase.auth.getSession().then(({ data: { session } }) => loadAuthenticatedUser(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => loadAuthenticatedUser(session));
+    return () => subscription.unsubscribe();
+  }, [loadAuthenticatedUser]);
+
+  const handleGoogleSignIn = async () => {
+    setAuthActionError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) throw error;
+  };
+
+  const handleLogout = async () => {
+    setAuthActionError(null);
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
+
+  const handleAccountAction = async () => {
+    try {
+      await (user ? handleLogout() : handleGoogleSignIn());
+    } catch (error) {
+      setAuthActionError(error.message || 'Could not update your sign-in session.');
+    }
+  };
+
+  const showToast = useCallback((message, type = 'success') => {
+    setToast({ message, type });
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const timeout = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -31,27 +92,6 @@ function App() {
     document.documentElement.lang = language;
     document.documentElement.dir = selectedLanguage.dir;
   }, [language, selectedLanguage.dir]);
-
-  useEffect(() => {
-    const loadSubscriptions = async () => {
-      if (userEmail) {
-        setSubscriptionsLoading(true);
-        setSubscriptionsError(null);
-        try {
-          const subs = await fetchSubscriptionsByEmail(userEmail);
-          setUserSubscriptions(subs);
-        } catch (err) {
-          setSubscriptionsError("Failed to load your subscriptions. Please check your network or try again later.");
-          console.error("Subscription fetch error:", err);
-        } finally {
-          setSubscriptionsLoading(false);
-        }
-      } else {
-        setUserSubscriptions([]);
-      }
-    };
-    loadSubscriptions();
-  }, [userEmail]);
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
@@ -64,6 +104,7 @@ function App() {
             </button>
           ))}
         </div>
+        <div className="account-controls">
         <button
           type="button"
           className="theme-toggle"
@@ -74,18 +115,26 @@ function App() {
           <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
           {theme === 'dark' ? t('lightMode') : t('darkMode')}
         </button>
+        <button type="button" className="account-auth-button" onClick={handleAccountAction}>
+          {!user && <img src={googleLogo} alt="" className="google-logo" />}
+          {user ? 'Log out' : 'Log in with Google'}
+        </button>
+        {authActionError && <p className="account-auth-error">{authActionError}</p>}
+        </div>
       </div>
       <main className="main-content">
         <FlightSearchForm
           theme={theme}
-          userEmail={userEmail}
-          setUserEmail={setUserEmail}
+          user={user}
+          onUserUpdated={setUser}
+          showToast={showToast}
           userSubscriptions={userSubscriptions}
           setUserSubscriptions={setUserSubscriptions}
           subscriptionsLoading={subscriptionsLoading}
           subscriptionsError={subscriptionsError}
         />
       </main>
+      <Toast toast={toast} />
     </div>
     </LanguageContext.Provider>
   );

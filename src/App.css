@@ -109,11 +109,17 @@ body,
 .theme-controls {
   width: 90%;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: -1rem;
   position: relative;
   z-index: 1;
+}
+
+.account-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .language-selector { display: inline-flex; gap: 0.3rem; padding: 0.25rem; background: var(--section-background); border: 1px solid var(--border-color); border-radius: 10px; box-shadow: 0 2px 8px rgba(0, 0, 0, .15); }
@@ -142,6 +148,48 @@ body,
 .theme-toggle:focus-visible {
   outline: 3px solid rgba(var(--primary-button-bg-rgb), 0.45);
   outline-offset: 3px;
+}
+
+.account-auth-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid var(--primary-button-bg);
+  background: var(--primary-button-bg);
+  color: var(--primary-button-text);
+  border-radius: 8px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.account-auth-button:hover {
+  filter: brightness(0.95);
+}
+
+.account-auth-error {
+  position: absolute;
+  margin-top: 2.8rem;
+  color: #b42318;
+  font-size: 0.8rem;
+}
+
+.toast {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 20;
+  max-width: min(24rem, calc(100vw - 3rem));
+  padding: 0.85rem 1.1rem;
+  border-radius: 8px;
+  color: #fff;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+}
+
+.toast-success { background: #198754; }
+.toast-error { background: #b42318; }
+
+.search-results-anchor {
+  scroll-margin-top: 1rem;
 }
 
 .main-content {
@@ -417,6 +465,22 @@ textarea:focus,
   justify-content: center;
   margin-top: 1rem;
   padding: 0 1rem;
+}
+
+.google-sign-in-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.save-user-section {
+  text-align: center;
+}
+
+.google-logo {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .date-range-presets {

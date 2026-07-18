@@ -1,4 +1,16 @@
+import { supabase } from './supabase';
+
 const BASE_URL = 'https://tunifly-backend-d67d3.ondigitalocean.app';
+
+const authenticatedHeaders = async (includeJson = false) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) throw new Error('Please continue with Google to manage price alerts.');
+
+    return {
+        ...(includeJson && { 'Content-Type': 'application/json' }),
+        Authorization: `Bearer ${session.access_token}`,
+    };
+};
 
 export const ping = async () => {
     try {
@@ -106,51 +118,26 @@ export const fetchPriceHistory = async (flightId) => {
     }
 };
 
-export const fetchUserByEmail = async (email) => {
-    if (!email) return null;
+export const fetchCurrentUser = async () => {
     try {
-        const response = await fetch(`${BASE_URL}/users/${encodeURIComponent(email)}`);
+        const response = await fetch(`${BASE_URL}/users/me`, {
+            headers: await authenticatedHeaders(),
+        });
         if (!response.ok) {
-            if (response.status === 404) {
-                return null;
-            }
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return await response.json();
     } catch (error) {
-        console.error(`Error fetching user ${email}:`, error);
+        console.error('Error fetching current user:', error);
         throw error;
     }
 };
 
-export const createUser = async (userData) => {
+export const updateCurrentUser = async (enabled) => {
     try {
-        const response = await fetch(`${BASE_URL}/users/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData),
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-        }
-        return await response.json();
-    } catch (error) {
-        console.error("Error creating user:", error);
-        throw error;
-    }
-};
-
-export const updateUserEmailNotificationSetting = async (email, enabled) => {
-    try {
-        const response = await fetch(`${BASE_URL}/users/${encodeURIComponent(email)}`, {
+        const response = await fetch(`${BASE_URL}/users/me`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await authenticatedHeaders(true),
             body: JSON.stringify({ enableNotificationsSetting: enabled }),
         });
 
@@ -160,15 +147,16 @@ export const updateUserEmailNotificationSetting = async (email, enabled) => {
         }
         return await response.json();
     } catch (error) {
-        console.error(`Error updating user notification setting for ${email}:`, error);
+        console.error('Error updating current user notification setting:', error);
         throw error;
     }
 };
 
-export const fetchSubscriptionsByEmail = async (email) => {
-    if (!email) return [];
+export const fetchSubscriptions = async () => {
     try {
-        const response = await fetch(`${BASE_URL}/subscriptions/?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`${BASE_URL}/subscriptions/`, {
+            headers: await authenticatedHeaders(),
+        });
         if (!response.ok) {
             if (response.status === 404) {
                 return [];
@@ -177,15 +165,17 @@ export const fetchSubscriptionsByEmail = async (email) => {
         }
         return await response.json();
     } catch (error) {
-        console.error(`Error fetching subscriptions for ${email}:`, error);
+        console.error('Error fetching subscriptions:', error);
         throw error;
     }
 };
 
-export const fetchSubscriptionByFlightAndEmail = async (flightId, email) => {
-    if (!flightId || !email) return null;
+export const fetchSubscriptionByFlight = async (flightId) => {
+    if (!flightId) return null;
     try {
-        const response = await fetch(`${BASE_URL}/subscriptions/flight/${flightId}?email=${encodeURIComponent(email)}`);
+        const response = await fetch(`${BASE_URL}/subscriptions/flight/${flightId}`, {
+            headers: await authenticatedHeaders(),
+        });
         if (!response.ok) {
             if (response.status === 404) {
                 return null;
@@ -194,7 +184,7 @@ export const fetchSubscriptionByFlightAndEmail = async (flightId, email) => {
         }
         return await response.json();
     } catch (error) {
-        console.error(`Error fetching subscription for flight ${flightId} and email ${email}:`, error);
+        console.error(`Error fetching subscription for flight ${flightId}:`, error);
         return null;
     }
 };
@@ -203,16 +193,13 @@ export const createSubscription = async (subscriptionData) => {
     try {
         const payload = {
             flightId: subscriptionData.flightId,
-            email: subscriptionData.email,
             targetPrice: subscriptionData.targetPrice,
             ...(subscriptionData.isActive !== undefined && { isActive: subscriptionData.isActive }),
         };
 
         const response = await fetch(`${BASE_URL}/subscriptions/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await authenticatedHeaders(true),
             body: JSON.stringify(payload),
         });
 
@@ -232,7 +219,6 @@ export const updateSubscription = async (subscriptionId, subscriptionData) => {
         const payload = Object.fromEntries(
             Object.entries({
                 flightId: subscriptionData.flightId,
-                email: subscriptionData.email,
                 targetPrice: subscriptionData.targetPrice,
                 isActive: subscriptionData.isActive,
                 enableEmailNotifications: subscriptionData.enableEmailNotifications,
@@ -241,9 +227,7 @@ export const updateSubscription = async (subscriptionId, subscriptionData) => {
 
         const response = await fetch(`${BASE_URL}/subscriptions/${subscriptionId}`, {
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: await authenticatedHeaders(true),
             body: JSON.stringify(payload),
         });
 
@@ -262,6 +246,7 @@ export const deleteSubscription = async (subscriptionId) => {
     try {
         const response = await fetch(`${BASE_URL}/subscriptions/${subscriptionId}`, {
             method: 'DELETE',
+            headers: await authenticatedHeaders(),
         });
 
         if (!response.ok) {

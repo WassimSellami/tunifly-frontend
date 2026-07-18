@@ -39,7 +39,7 @@ const getFlightsPerPage = () => {
     return 9;
 };
 
-const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, userSubscriptions, setUserSubscriptions, enableEmailNotifications }) => {
+const FlightResultsDisplay = ({ theme, groupedFlights, airlines, isAuthenticated, userSubscriptions, setUserSubscriptions, showToast }) => {
     const { t, language } = useLanguage();
     const isRtl = language === 'ar';
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -372,10 +372,10 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, userEmail, user
                     flight={selectedFlight}
                     onClose={() => setIsModalOpen(false)}
                     airlines={airlines}
-                    userEmail={userEmail}
+                    isAuthenticated={isAuthenticated}
                     userSubscriptions={userSubscriptions}
                     setUserSubscriptions={setUserSubscriptions}
-                    enableEmailNotifications={enableEmailNotifications}
+                    showToast={showToast}
                 />
             )}
         </>

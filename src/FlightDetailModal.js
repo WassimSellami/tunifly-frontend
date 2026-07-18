@@ -49,6 +49,8 @@ const PriceGauge = ({ current, analytics, t }) => {
 
     const position = ((current - gaugeMin) / gaugeRange) * 100;
     const clampedPosition = Math.max(3, Math.min(97, position));
+    const statusKey = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
+    const edgeClass = clampedPosition < 15 ? 'gauge-handle-left-edge' : clampedPosition > 85 ? 'gauge-handle-right-edge' : '';
 
     return (
         <div className="price-gauge-container">
@@ -61,8 +63,8 @@ const PriceGauge = ({ current, analytics, t }) => {
                 <div className="gauge-bar-avg" style={{ width: `${avgWidth}%` }}></div>
                 <div className="gauge-bar-high" style={{ width: `${highWidth}%` }}></div>
             </div>
-            <div className="gauge-handle" style={{ left: `${clampedPosition}%` }}>
-                <div className="gauge-handle-label">€{current.toFixed(0)} is {status}</div>
+            <div className={`gauge-handle ${edgeClass}`} style={{ left: `${clampedPosition}%` }}>
+                <div className="gauge-handle-label" dir="auto">{t('priceIsStatus', { price: current.toFixed(0), status: t(`priceStatus${statusKey}`) })}</div>
                 <div className="gauge-handle-dot"></div>
             </div>
             <div className="gauge-labels">
@@ -76,7 +78,7 @@ const PriceGauge = ({ current, analytics, t }) => {
 };
 
 
-const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSubscriptions = [], setUserSubscriptions }) => {
+const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, userSubscriptions = [], setUserSubscriptions, showToast }) => {
     const { t } = useLanguage();
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -124,6 +126,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
             status
         };
     }, [history, flight.priceEur]);
+    const currentStatusKey = priceAnalytics?.status ? `${priceAnalytics.status.charAt(0).toUpperCase()}${priceAnalytics.status.slice(1)}` : null;
 
 
     useEffect(() => {
@@ -156,7 +159,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
     const handleSetAlert = async () => {
         const parsedTargetPrice = Number(targetPrice);
         if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
-            setSubscriptionFeedback({ type: 'error', text: 'Enter a target price greater than zero.' });
+            setSubscriptionFeedback({ type: 'error', text: t('targetPriceInvalid') });
             return;
         }
 
@@ -165,15 +168,16 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
         try {
             const savedSubscription = currentSubscription
                 ? await updateSubscription(currentSubscription.id, { targetPrice: parsedTargetPrice, isActive: true })
-                : await createSubscription({ flightId: flight.id, email: userEmail, targetPrice: parsedTargetPrice, isActive: true });
+                : await createSubscription({ flightId: flight.id, targetPrice: parsedTargetPrice, isActive: true });
 
             setUserSubscriptions?.(previousSubscriptions => {
                 const withoutCurrentFlight = previousSubscriptions.filter(subscription => subscription.flightId !== flight.id);
                 return [...withoutCurrentFlight, savedSubscription];
             });
+            showToast?.(currentSubscription ? 'Price alert updated successfully!' : 'Price alert created successfully!');
         } catch (error) {
             console.error('Failed to save subscription:', error);
-            setSubscriptionFeedback({ type: 'error', text: error.message || 'Could not save your price alert.' });
+            showToast?.(error.message || 'Could not save your price alert.', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -283,7 +287,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                 <div className="modal-column-left">
                     <div className="price-history-section">
                         <h3>{t('history')}</h3>
-                        <div className="modal-chart-container">
+                        <div className="modal-chart-container" dir="ltr">
                             {!loading && chartData.datasets[0].data.length > 1 ? (<Line options={chartOptions} data={chartData} />) : (<p>{t('loadingChart')}</p>)}
                         </div>
                     </div>
@@ -296,9 +300,9 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                     </div>
 
                     <div className="price-analysis-section">
-                        <h2 className="price-analysis-header">Prices are currently <span className={`price-status ${priceAnalytics?.status || ''}`}>{priceAnalytics?.status || '...'}</span></h2>
+                        <h2 className="price-analysis-header">{t('pricesCurrently')} <span className={`price-status ${priceAnalytics?.status || ''}`}>{currentStatusKey ? t(`currentStatus${currentStatusKey}`) : '...'}</span></h2>
                         <p className="price-range-info">
-                            Similar trips usually cost between €{priceAnalytics?.lowThreshold.toFixed(0)}–€{priceAnalytics?.highThreshold.toFixed(0)}.
+                            {t('similarTrips', { low: priceAnalytics?.lowThreshold.toFixed(0), high: priceAnalytics?.highThreshold.toFixed(0) })}
                         </p>
                     </div>
 
@@ -312,18 +316,18 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                             <div className="form-group">
                                 <input
                                     type="number"
-                                    placeholder={currentSubscription ? `Current alert: €${currentSubscription.targetPrice.toFixed(0)}` : 'Target Price'}
+                                    placeholder={currentSubscription ? t('currentAlert', { price: currentSubscription.targetPrice.toFixed(0) }) : t('targetPrice')}
                                     value={targetPrice}
                                     onChange={e => setTargetPrice(e.target.value)}
                                     className="target-price-input"
-                                    disabled={submitting || !userEmail}
+                                    disabled={submitting || !isAuthenticated}
                                 />
-                                <button type="button" className="action-button" onClick={handleSetAlert} disabled={submitting || !userEmail}>
+                                <button type="button" className="action-button" onClick={handleSetAlert} disabled={submitting || !isAuthenticated}>
                                     {submitting ? t('saving') : currentSubscription ? t('updateAlert') : t('setAlert')}
                                 </button>
                             </div>
-                            {!userEmail && (
-                                <p className="subscription-email-prompt">{t('emailFirst')}</p>
+                            {!isAuthenticated && (
+                                <p className="subscription-email-prompt">{t('loginToTrack')}</p>
                             )}
                             {currentSubscription && (
                                 <p className="subscription-feedback success">{t('alreadyTracking')}</p>
@@ -334,7 +338,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, userEmail, userSu
                         </div>
                         <div className="book-now-container">
                             <h3>{t('readyToBook')}</h3>
-                            <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>Book Now ✈️</a>
+                            <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>{t('bookNow')}</a>
                         </div>
                     </div>
                 </div>

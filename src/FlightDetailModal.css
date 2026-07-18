@@ -176,8 +176,10 @@
 }
 
 .gauge-handle-label {
-    background-color: var(--primary-button-bg);
-    color: var(--primary-button-text);
+    background-color: var(--section-background);
+    color: var(--text-color);
+    border: 2px solid var(--primary-button-bg);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
     padding: 5px 12px;
     border-radius: 16px;
     font-size: 0.9rem;
@@ -187,6 +189,16 @@
     bottom: 28px;
     left: 50%;
     transform: translateX(-50%);
+}
+
+.gauge-handle-left-edge .gauge-handle-label {
+    left: 0;
+    transform: translateX(-5%);
+}
+
+.gauge-handle-right-edge .gauge-handle-label {
+    left: 100%;
+    transform: translateX(-95%);
 }
 
 .gauge-range-labels {
@@ -232,7 +244,7 @@
 .gauge-handle-dot {
     width: 20px;
     height: 20px;
-    background-color: white;
+    background-color: var(--section-background);
     border: 5px solid var(--primary-button-bg);
     border-radius: 50%;
     margin: 0 auto;

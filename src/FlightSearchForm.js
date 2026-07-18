@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, updateUserEmailNotificationSetting, fetchFlightById, fetchSubscriptionsByEmail, fetchUserByEmail, createUser } from './api';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, fetchFlightById, fetchSubscriptions, updateCurrentUser } from './api';
 import { isBefore, isAfter, isSameDay, addDays, format, differenceInDays, addMonths, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
+import { enUS, ar, de } from 'date-fns/locale';
 import FlightResultsDisplay from './FlightResultsDisplay';
 import 'react-datepicker/dist/react-datepicker.css';
 import './CustomDatePicker.css';
@@ -29,8 +30,20 @@ ChartJS.register(
     ChartDataLabels
 );
 
-const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, subscriptionsLoading, subscriptionsError, setUserSubscriptions }) => {
-    const { t } = useLanguage();
+const maghrebiArabicMonths = [
+    '\u062c\u0627\u0646\u0641\u064a', '\u0641\u064a\u0641\u0631\u064a', '\u0645\u0627\u0631\u0633', '\u0623\u0641\u0631\u064a\u0644',
+    '\u0645\u0627\u064a', '\u062c\u0648\u0627\u0646', '\u062c\u0648\u064a\u0644\u064a\u0629', '\u0623\u0648\u062a',
+    '\u0633\u0628\u062a\u0645\u0628\u0631', '\u0623\u0643\u062a\u0648\u0628\u0631', '\u0646\u0648\u0641\u0645\u0628\u0631', '\u062f\u064a\u0633\u0645\u0628\u0631',
+];
+
+const getMonthName = (date, language) => (
+    language === 'ar'
+        ? maghrebiArabicMonths[date.getMonth()]
+        : format(date, 'MMMM', { locale: { en: enUS, ar, de }[language] })
+);
+
+const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscriptions, subscriptionsLoading, subscriptionsError, setUserSubscriptions }) => {
+    const { t, language } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
@@ -50,8 +63,8 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
     const dateRangePresets = useMemo(() => {
         const capAtMaximumDate = (date) => isAfter(date, maxSelectableDate) ? maxSelectableDate : date;
         const presets = [
-            { label: 'Next 7 days', start: minSelectableDate, end: capAtMaximumDate(addDays(minSelectableDate, 6)) },
-            { label: `Rest of ${format(minSelectableDate, 'MMMM')}`, start: minSelectableDate, end: capAtMaximumDate(endOfMonth(minSelectableDate)) },
+            { label: t('next7Days'), start: minSelectableDate, end: capAtMaximumDate(addDays(minSelectableDate, 6)) },
+            { label: t('restOfMonth', { month: getMonthName(minSelectableDate, language) }), start: minSelectableDate, end: capAtMaximumDate(endOfMonth(minSelectableDate)) },
         ];
 
         for (let monthOffset = 1; monthOffset <= 3; monthOffset += 1) {
@@ -59,26 +72,48 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
             if (isAfter(monthStart, maxSelectableDate)) break;
 
             presets.push({
-                label: format(monthStart, 'MMMM'),
+                label: getMonthName(monthStart, language),
                 start: monthStart,
                 end: capAtMaximumDate(endOfMonth(monthStart)),
             });
         }
 
-        presets.push({ label: 'Next 3 months', start: minSelectableDate, end: maxSelectableDate });
+        presets.push({ label: t('next3Months'), start: minSelectableDate, end: maxSelectableDate });
         return presets;
-    }, [minSelectableDate, maxSelectableDate]);
+    }, [language, maxSelectableDate, minSelectableDate, t]);
     const [selectedAirlineCodes, setSelectedAirlineCodes] = useState([]);
     const [searchResults, setSearchResults] = useState(null);
-    const [enableEmailNotifications, setEnableEmailNotifications] = useState(true);
+    const resultsRef = useRef(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedFlightFromSubscription, setSelectedFlightFromSubscription] = useState(null);
     const [displaySubscriptions, setDisplaySubscriptions] = useState([]);
     const [displaySubsLoading, setDisplaySubsLoading] = useState(false);
-    const [userExists, setUserExists] = useState(false);
-    const [userCheckLoading, setUserCheckLoading] = useState(false);
     const [userActionError, setUserActionError] = useState(null);
     const [formErrors, setFormErrors] = useState({});
+    const [notificationsSaving, setNotificationsSaving] = useState(false);
+    // Kept temporarily while the legacy email controls are hidden during the OAuth migration.
+    const userEmail = '';
+    const userExists = false;
+    const userCheckLoading = false;
+    const enableEmailNotifications = true;
+    const setUserEmail = () => {};
+    const setUserExists = () => {};
+    const setEnableEmailNotifications = () => {};
+    const handleEmailBlur = () => {};
+    const handleSaveUser = () => {};
+
+    const handleNotificationToggle = async (enabled) => {
+        setNotificationsSaving(true);
+        setUserActionError(null);
+        try {
+            const updatedUser = await updateCurrentUser(enabled);
+            onUserUpdated(updatedUser);
+        } catch (error) {
+            showToast(error.message || 'Could not update notification preferences.', 'error');
+        } finally {
+            setNotificationsSaving(false);
+        }
+    };
 
     const capitalizeWords = useCallback((str) => {
         if (!str) return '';
@@ -98,45 +133,6 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
         const airline = allAirlines.find(a => a.code === code);
         return airline ? `${capitalizeWords(airline.name)} (${code})` : code;
     }, [allAirlines, capitalizeWords]);
-
-    const handleEmailBlur = useCallback(async () => {
-        if (!userEmail || !userEmail.includes('@') || !userEmail.includes('.')) {
-            setUserExists(false);
-            return;
-        }
-
-        setUserCheckLoading(true);
-        setUserActionError(null);
-        try {
-            const user = await fetchUserByEmail(userEmail);
-            if (user) {
-                setUserExists(true);
-                setEnableEmailNotifications(user.enableNotificationsSetting);
-            } else {
-                setUserExists(false);
-                setEnableEmailNotifications(true);
-            }
-        } catch (err) {
-            console.error("Failed to check user existence:", err);
-            setUserActionError("Could not verify user status. " + err.message);
-            setUserExists(false);
-        } finally {
-            setUserCheckLoading(false);
-        }
-    }, [userEmail]);
-
-    useEffect(() => {
-        if (userEmail) {
-            handleEmailBlur();
-        }
-    }, [userEmail, handleEmailBlur]);
-    
-    useEffect(() => {
-        if (userEmail && userExists && !userCheckLoading) {
-            updateUserEmailNotificationSetting(userEmail, enableEmailNotifications)
-                .catch(err => console.error("Failed to update user email notification setting:", err));
-        }
-    }, [enableEmailNotifications, userEmail, userExists, userCheckLoading]);
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -163,14 +159,14 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
     }, []);
 
     const loadAndEnrichSubscriptions = useCallback(async () => {
-        if (!userEmail || !userExists) {
+        if (!user) {
             setDisplaySubscriptions([]);
             setUserSubscriptions([]);
             return;
         }
         setDisplaySubsLoading(true);
         try {
-            const rawSubs = await fetchSubscriptionsByEmail(userEmail);
+            const rawSubs = await fetchSubscriptions();
             const enrichedSubsPromises = rawSubs.map(async (sub) => {
                 try {
                     const flightDetails = await fetchFlightById(sub.flightId);
@@ -201,17 +197,23 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
         } finally {
             setDisplaySubsLoading(false);
         }
-    }, [userEmail, userExists, setUserSubscriptions]);
+    }, [user, setUserSubscriptions]);
 
     useEffect(() => {
-        if (userExists) {
+        if (user) {
             loadAndEnrichSubscriptions();
         }
-    }, [userExists, loadAndEnrichSubscriptions]);
+    }, [user, loadAndEnrichSubscriptions]);
 
     useEffect(() => {
         setUserSubscriptions(displaySubscriptions);
     }, [displaySubscriptions, setUserSubscriptions]);
+
+    useEffect(() => {
+        if (!loading && searchResults && Object.keys(searchResults).length > 0) {
+            resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [loading, searchResults]);
 
     const handleDepartureAirportToggle = (airportCode) => {
         setSelectedDepartureAirportCodes(prev => {
@@ -313,9 +315,9 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
             try {
                 await deleteSubscription(subId);
                 setDisplaySubscriptions(prevSubs => prevSubs.filter(sub => sub.id !== subId));
-                setUserActionError("Subscription deleted successfully!");
+                showToast('Subscription deleted successfully!');
             } catch (err) {
-                setUserActionError("Failed to delete subscription: " + err.message);
+                showToast('Failed to delete subscription: ' + err.message, 'error');
                 console.error("Delete subscription error:", err);
             }
         }
@@ -339,36 +341,6 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
             setLoading(false);
         }
     }, []);
-
-    const handleSaveUser = async () => {
-        setUserActionError(null);
-        if (!userEmail || !userEmail.includes('@') || !userEmail.includes('.')) {
-            setUserActionError("Please enter a valid email address.");
-            return;
-        }
-        try {
-            await createUser({
-                email: userEmail,
-                enableNotificationsSetting: enableEmailNotifications
-            });
-            setUserExists(true);
-            setUserActionError("Your email has been saved successfully!");
-            loadAndEnrichSubscriptions();
-        } catch (err) {
-            console.error("Error saving user:", err);
-            setUserActionError(err.message || "Failed to save user. Please try again.");
-            if (err.message && err.message.includes("already registered")) {
-                setUserExists(true);
-                setUserActionError("This email is already registered. Data loaded.");
-                try {
-                    const user = await fetchUserByEmail(userEmail);
-                    if (user) setEnableEmailNotifications(user.enableNotificationsSetting);
-                } catch (fetchErr) {
-                    console.error("Failed to fetch user settings after duplicate error:", fetchErr);
-                }
-            }
-        }
-    };
 
     const onSliderChange = useCallback((values) => {
         const [startDays, endDays] = values;
@@ -417,10 +389,58 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
 
     return (
         <div className="flight-search-container">
-            <h1>{t('welcome')}</h1>
+            <h1>{user ? t('welcomeTuniFly', { name: user.displayName || user.email.split('@')[0] }) : t('welcomeTuniFlyGuest')}</h1>
             <form onSubmit={handleSubmit} className="form-grid">
                 <fieldset className="email-section full-span">
                     <legend>{t('subscription')}</legend>
+                    {!user && (
+                        <div className="save-user-section">
+                            <p className="email-clarification-text">Sign in to save price alerts and receive notifications.</p>
+                        </div>
+                    )}
+                    {user && (
+                        <>
+                            <div className="notification-checkbox-group">
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={user.enableNotificationsSetting}
+                                        disabled={notificationsSaving}
+                                        onChange={(event) => handleNotificationToggle(event.target.checked)}
+                                    />
+                                    {t('enableNotifications')}
+                                </label>
+                            </div>
+                            {notificationsSaving && <p className="loading-spinner">Saving notification preference...</p>}
+                            {(displaySubsLoading || subscriptionsLoading) && <p className="loading-spinner">Loading your subscriptions...</p>}
+                            {subscriptionsError && !displaySubsLoading && <p className="error-text-small">{subscriptionsError}</p>}
+                            <div className="user-subscriptions-list">
+                                <h3 className="subscriptions-header">
+                                    {t('trackedFlights')}
+                                    <button type="button" onClick={loadAndEnrichSubscriptions} className="refresh-button" title="Refresh Subscriptions">↻</button>
+                                </h3>
+                                {displaySubscriptions.length > 0 ? (
+                                    <ul>
+                                        {displaySubscriptions.map(sub => (
+                                            <li key={sub.id} onClick={() => sub.flightDepartureDate && handleSubscriptionClick(sub)}>
+                                                <span className="subscription-status-icon">{sub.isActive ? '🟢' : '⚫'}</span>
+                                                <span className="subscription-details">
+                                                    {getAirportDisplayName(sub.flightDepartureAirportCode)} → {getAirportDisplayName(sub.flightArrivalAirportCode)}
+                                                    {sub.flightDepartureDate && <span className="sub-date"> on {format(new Date(sub.flightDepartureDate), 'dd MMM')}</span>}
+                                                    <span className="sub-airline">{getAirlineDisplayName(sub.flightAirlineCode)}</span>
+                                                </span>
+                                                <span className="sub-price">{t('target')} {sub.targetPrice.toFixed(0)}€</span>
+                                                <button type="button" className="delete-sub-button" onClick={(event) => handleDeleteSubscription(sub.id, event)} title="Delete Subscription">×</button>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="no-subscriptions-message">{t('noTrackedFlights')}</p>
+                                )}
+                            </div>
+                        </>
+                    )}
+                    {false && <>
                     <div className="input-group">
                         <label htmlFor="userEmail">{t('email')}</label>
                         <input
@@ -510,6 +530,7 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
                         </>
                     )}
                     {formErrors.userExists && <p className="error-message-inline">{formErrors.userExists}</p>}
+                    </>}
                 </fieldset>
                 <fieldset className="airport-selection-section full-span">
                     <legend>{t('airports')}</legend>
@@ -621,27 +642,29 @@ const FlightSearchForm = ({ theme, userEmail, setUserEmail, userSubscriptions, s
             {loadingMessage}
             {errorMessage}
             {noFlightsMessage}
-            {searchResults && Object.keys(searchResults).length > 0 ? (
-                <FlightResultsDisplay
-                    theme={theme}
-                    groupedFlights={searchResults}
-                    airlines={allAirlines}
-                    userEmail={userEmail}
-                    userSubscriptions={userSubscriptions}
-                    setUserSubscriptions={setUserSubscriptions}
-                    enableEmailNotifications={enableEmailNotifications}
-                />
-            ) : null}
+            <div ref={resultsRef} className="search-results-anchor">
+                {searchResults && Object.keys(searchResults).length > 0 ? (
+                    <FlightResultsDisplay
+                        theme={theme}
+                        groupedFlights={searchResults}
+                        airlines={allAirlines}
+                        isAuthenticated={Boolean(user)}
+                        userSubscriptions={userSubscriptions}
+                        setUserSubscriptions={setUserSubscriptions}
+                        showToast={showToast}
+                    />
+                ) : null}
+            </div>
             {isModalOpen && selectedFlightFromSubscription && (
                 <FlightDetailModal
                     theme={theme}
                     flight={selectedFlightFromSubscription}
                     onClose={() => setIsModalOpen(false)}
                     airlines={allAirlines}
-                    userEmail={userEmail}
+                    isAuthenticated={Boolean(user)}
                     userSubscriptions={userSubscriptions}
                     setUserSubscriptions={setUserSubscriptions}
-                    enableEmailNotifications={enableEmailNotifications}
+                    showToast={showToast}
                 />
             )}
         </div>
