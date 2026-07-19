@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import googleLogo from './assets/google-g.svg';
 import Toast from './Toast';
 import { LanguageContext, languages, translate } from './i18n';
+import PrivacyPage from './PrivacyPage';
 import './App.css';
 
 function App() {
@@ -93,10 +94,13 @@ function App() {
     document.documentElement.dir = selectedLanguage.dir;
   }, [language, selectedLanguage.dir]);
 
+  const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacy';
+
   return (
     <LanguageContext.Provider value={{ language, t }}>
       <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
-        <div className="theme-controls">
+        {isPrivacyPage ? <PrivacyPage /> : <>
+          <div className="theme-controls">
           <div className="language-selector" aria-label={t('language')}>
             {languages.map(({ code, label, flag }) => (
               <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
@@ -134,7 +138,18 @@ function App() {
             subscriptionsError={subscriptionsError}
           />
         </main>
-        <Toast toast={toast} />
+        <footer className="site-footer">
+          <div className="footer-content">
+            <p className="footer-brand">TuniFly</p>
+            <nav className="footer-links" aria-label={t('footerNavigation')}>
+              <a href="/privacy">{t('privacyPolicy')}</a>
+              <a href={`mailto:wassimsellami20@gmail.com?subject=${encodeURIComponent(t('supportRequestSubject'))}`}>{t('contactUs')}</a>
+            </nav>
+            <p className="footer-copyright">{t('footerCopyright', { year: new Date().getFullYear() })}</p>
+          </div>
+        </footer>
+          <Toast toast={toast} />
+        </>}
       </div>
     </LanguageContext.Provider>
   );
