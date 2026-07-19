@@ -7,6 +7,7 @@ import Toast from './Toast';
 import { LanguageContext, languages, translate } from './i18n';
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
+import TermsPage from './TermsPage';
 import './App.css';
 
 function App() {
@@ -117,13 +118,15 @@ function App() {
     document.documentElement.dir = selectedLanguage.dir;
   }, [language, selectedLanguage.dir]);
 
-  const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacy';
-  const isSearchPage = ['/search', '/auth/callback'].includes(window.location.pathname.replace(/\/+$/, ''));
+  const currentPath = window.location.pathname.replace(/\/+$/, '');
+  const isPrivacyPage = currentPath === '/privacy';
+  const isTermsPage = currentPath === '/terms';
+  const isSearchPage = ['/search', '/auth/callback'].includes(currentPath);
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
       <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
-        {isPrivacyPage ? <PrivacyPage /> : <>
+        {isPrivacyPage ? <PrivacyPage /> : isTermsPage ? <TermsPage /> : <>
           <div className="theme-controls">
           {isSearchPage && <a className="home-link" href="/">{t('home')}</a>}
           <div className="language-selector" aria-label={t('language')}>
@@ -170,6 +173,7 @@ function App() {
             <p className="footer-brand">TuniFly</p>
             <nav className="footer-links" aria-label={t('footerNavigation')}>
               <a href="/privacy">{t('privacyPolicy')}</a>
+              <a href="/terms">{t('termsOfService')}</a>
               <a href={`mailto:wassimsellami20@gmail.com?subject=${encodeURIComponent(t('supportRequestSubject'))}`}>{t('contactUs')}</a>
             </nav>
             <p className="footer-copyright">{t('footerCopyright', { year: new Date().getFullYear() })}</p>
