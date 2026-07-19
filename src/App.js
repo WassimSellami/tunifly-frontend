@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import FlightSearchForm from './FlightSearchForm';
 import { fetchCurrentUser, fetchSubscriptions } from './api';
 import { supabase } from './supabase';
@@ -19,30 +19,52 @@ function App() {
   const [authActionError, setAuthActionError] = useState(null);
   const [toast, setToast] = useState(null);
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
+  const authLoadIdRef = useRef(0);
   const selectedLanguage = languages.find(({ code }) => code === language) || languages[0];
   const t = (key, values) => translate(language, key, values);
 
   const loadAuthenticatedUser = useCallback(async (session) => {
+    const loadId = ++authLoadIdRef.current;
     if (!session) {
       setUser(null);
       setUserSubscriptions([]);
+      setSubscriptionsLoading(false);
       return;
     }
+
+    const sessionUser = session.user;
+    const displayName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'TuniFly user';
+
+    // Supabase session state is authoritative for sign-in. Do not make the UI
+    // appear logged out merely because the optional backend profile calls fail.
+    setUser((currentUser) => ({
+      ...currentUser,
+      id: sessionUser.id,
+      email: sessionUser.email,
+      displayName,
+    }));
     setSubscriptionsLoading(true);
     setSubscriptionsError(null);
-    try {
-      const [currentUser, subscriptions] = await Promise.all([fetchCurrentUser(), fetchSubscriptions()]);
-      setUser({
+
+    const [currentUserResult, subscriptionsResult] = await Promise.allSettled([fetchCurrentUser(), fetchSubscriptions()]);
+    if (loadId !== authLoadIdRef.current) return;
+
+    if (currentUserResult.status === 'fulfilled') {
+      setUser((currentUser) => ({
         ...currentUser,
-        displayName: session.user.user_metadata?.full_name || session.user.user_metadata?.name || currentUser.email.split('@')[0],
-      });
-      setUserSubscriptions(subscriptions);
-    } catch (error) {
-      setSubscriptionsError('Failed to load your account. Please try signing in again.');
-      console.error('Authenticated user load error:', error);
-    } finally {
-      setSubscriptionsLoading(false);
+        ...currentUserResult.value,
+        displayName,
+      }));
     }
+
+    if (subscriptionsResult.status === 'fulfilled') {
+      setUserSubscriptions(subscriptionsResult.value);
+    } else {
+      setSubscriptionsError('Failed to load your account. Please try signing in again.');
+      console.error('Authenticated subscription load error:', subscriptionsResult.reason);
+    }
+
+    setSubscriptionsLoading(false);
   }, []);
 
   useEffect(() => {
@@ -145,7 +167,6 @@ function App() {
               <a href="/privacy">{t('privacyPolicy')}</a>
               <a href={`mailto:wassimsellami20@gmail.com?subject=${encodeURIComponent(t('supportRequestSubject'))}`}>{t('contactUs')}</a>
             </nav>
-            <p className="footer-purpose">{t('appDescription')}</p>
             <p className="footer-copyright">{t('footerCopyright', { year: new Date().getFullYear() })}</p>
           </div>
         </footer>

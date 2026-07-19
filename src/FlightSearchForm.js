@@ -389,7 +389,11 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
 
     return (
         <div className="flight-search-container">
-            <h1>{user ? t('welcomeTuniFly', { name: user.displayName || user.email.split('@')[0] }) : t('welcomeTuniFlyGuest')}</h1>
+            <header className="app-identity" aria-labelledby="app-title">
+                <h1 id="app-title">TuniFly</h1>
+                <p className="welcome-message">{user ? t('welcomeTuniFly', { name: user.displayName || user.email.split('@')[0] }) : t('welcomeTuniFlyGuest')}</p>
+                <p className="homepage-description">{t('appDescription')}</p>
+            </header>
             <form onSubmit={handleSubmit} className="form-grid">
                 <fieldset className="email-section full-span">
                     <legend>{t('subscription')}</legend>
