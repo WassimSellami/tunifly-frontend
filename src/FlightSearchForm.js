@@ -96,11 +96,11 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
     const userExists = false;
     const userCheckLoading = false;
     const enableEmailNotifications = true;
-    const setUserEmail = () => {};
-    const setUserExists = () => {};
-    const setEnableEmailNotifications = () => {};
-    const handleEmailBlur = () => {};
-    const handleSaveUser = () => {};
+    const setUserEmail = () => { };
+    const setUserExists = () => { };
+    const setEnableEmailNotifications = () => { };
+    const handleEmailBlur = () => { };
+    const handleSaveUser = () => { };
 
     const handleNotificationToggle = async (enabled) => {
         setNotificationsSaving(true);
@@ -391,8 +391,6 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
         <div className="flight-search-container">
             <header className="app-identity" aria-labelledby="app-title">
                 <h1 id="app-title">TuniFly</h1>
-                <p className="homepage-description">{t('appDescription')}</p>
-                <p className="google-sign-in-purpose">{t('googleSignInPurpose')}</p>
                 <p className="welcome-message">{user ? t('welcomeTuniFly', { name: user.displayName || user.email.split('@')[0] }) : t('welcomeTuniFlyGuest')}</p>
             </header>
             <form onSubmit={handleSubmit} className="form-grid">
@@ -446,95 +444,95 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                         </>
                     )}
                     {false && <>
-                    <div className="input-group">
-                        <label htmlFor="userEmail">{t('email')}</label>
-                        <input
-                            type="email"
-                            id="userEmail"
-                            value={userEmail}
-                            onChange={(e) => {
-                                setUserEmail(e.target.value);
-                                setUserExists(false);
-                                setUserActionError(null);
-                                setFormErrors(prev => ({ ...prev, userEmail: null, userExists: null }));
-                            }}
-                            onBlur={handleEmailBlur}
-                            placeholder={t('emailPlaceholder')}
-                            className="text-input"
-                        />
-                    </div>
-                    <p className="email-clarification-text">
-                        {t('emailHelp')}
-                    </p>
-                    {formErrors.userEmail && <p className="error-message-inline">{formErrors.userEmail}</p>}
-                    {userCheckLoading && <p className="loading-spinner">Checking user status...</p>}
-                    {userActionError && <p className={`feedback-message ${userActionError.includes('success') ? 'success-message-inline' : 'error-message-inline'}`}>{userActionError}</p>}
-                    {!userCheckLoading && !userExists && userEmail && userEmail.includes('@') && userEmail.includes('.') && (
-                        <div className="save-user-section">
-                            <button type="button" className="save-user-button" onClick={handleSaveUser}>
-                                {t('saveEmail')}
-                            </button>
-                            <p className="save-user-info-text">{t('saveEmailHelp')}</p>
+                        <div className="input-group">
+                            <label htmlFor="userEmail">{t('email')}</label>
+                            <input
+                                type="email"
+                                id="userEmail"
+                                value={userEmail}
+                                onChange={(e) => {
+                                    setUserEmail(e.target.value);
+                                    setUserExists(false);
+                                    setUserActionError(null);
+                                    setFormErrors(prev => ({ ...prev, userEmail: null, userExists: null }));
+                                }}
+                                onBlur={handleEmailBlur}
+                                placeholder={t('emailPlaceholder')}
+                                className="text-input"
+                            />
                         </div>
-                    )}
-                    {userExists && !userCheckLoading && (
-                        <>
-                            <div className="notification-checkbox-group">
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={enableEmailNotifications}
-                                        onChange={(e) => setEnableEmailNotifications(e.target.checked)}
-                                    /> {t('notifications')}
-                                </label>
+                        <p className="email-clarification-text">
+                            {t('emailHelp')}
+                        </p>
+                        {formErrors.userEmail && <p className="error-message-inline">{formErrors.userEmail}</p>}
+                        {userCheckLoading && <p className="loading-spinner">Checking user status...</p>}
+                        {userActionError && <p className={`feedback-message ${userActionError.includes('success') ? 'success-message-inline' : 'error-message-inline'}`}>{userActionError}</p>}
+                        {!userCheckLoading && !userExists && userEmail && userEmail.includes('@') && userEmail.includes('.') && (
+                            <div className="save-user-section">
+                                <button type="button" className="save-user-button" onClick={handleSaveUser}>
+                                    {t('saveEmail')}
+                                </button>
+                                <p className="save-user-info-text">{t('saveEmailHelp')}</p>
                             </div>
-                            <p className="subscription-info-text">
-                                {t('subscriptionHelp')}
-                            </p>
-                            {displaySubsLoading && <p className="loading-spinner">Loading your subscriptions...</p>}
-                            {subscriptionsError && !displaySubsLoading && <p className="error-text-small">{subscriptionsError}</p>}
-                            <div className="user-subscriptions-list">
-                                <h3 className="subscriptions-header">
-                                    Your Subscribed Flights:
-                                    <button type="button" onClick={loadAndEnrichSubscriptions} className="refresh-button" title="Refresh Subscriptions">
-                                        ↻
-                                    </button>
-                                </h3>
-                                {displaySubscriptions.length > 0 ? (
-                                    <ul>
-                                        {displaySubscriptions.map(sub => (
-                                            <li key={sub.id} onClick={() => sub.flightDepartureDate && handleSubscriptionClick(sub)}>
-                                                <span className="subscription-status-icon">
-                                                    {sub.isActive ? '🟢' : '⚫'}
-                                                </span>
-                                                <span className="subscription-details">
-                                                    {getAirportDisplayName(sub.flightDepartureAirportCode)} → {getAirportDisplayName(sub.flightArrivalAirportCode)}
-                                                    {sub.flightDepartureDate && (
-                                                        <span className="sub-date">
-                                                            on {format(new Date(sub.flightDepartureDate), 'dd MMM')}
-                                                        </span>
-                                                    )}
-                                                    <span className="sub-airline">{getAirlineDisplayName(sub.flightAirlineCode)}</span>
-                                                </span>
-                                                <span className="sub-price">Target: {sub.targetPrice.toFixed(0)}€</span>
-                                                <button
-                                                    type="button"
-                                                    className="delete-sub-button"
-                                                    onClick={(event) => handleDeleteSubscription(sub.id, event)}
-                                                    title="Delete Subscription"
-                                                >
-                                                    ×
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                ) : (
-                                    <p className="no-subscriptions-message">You have no active flight price subscriptions.</p>
-                                )}
-                            </div>
-                        </>
-                    )}
-                    {formErrors.userExists && <p className="error-message-inline">{formErrors.userExists}</p>}
+                        )}
+                        {userExists && !userCheckLoading && (
+                            <>
+                                <div className="notification-checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={enableEmailNotifications}
+                                            onChange={(e) => setEnableEmailNotifications(e.target.checked)}
+                                        /> {t('notifications')}
+                                    </label>
+                                </div>
+                                <p className="subscription-info-text">
+                                    {t('subscriptionHelp')}
+                                </p>
+                                {displaySubsLoading && <p className="loading-spinner">Loading your subscriptions...</p>}
+                                {subscriptionsError && !displaySubsLoading && <p className="error-text-small">{subscriptionsError}</p>}
+                                <div className="user-subscriptions-list">
+                                    <h3 className="subscriptions-header">
+                                        Your Subscribed Flights:
+                                        <button type="button" onClick={loadAndEnrichSubscriptions} className="refresh-button" title="Refresh Subscriptions">
+                                            ↻
+                                        </button>
+                                    </h3>
+                                    {displaySubscriptions.length > 0 ? (
+                                        <ul>
+                                            {displaySubscriptions.map(sub => (
+                                                <li key={sub.id} onClick={() => sub.flightDepartureDate && handleSubscriptionClick(sub)}>
+                                                    <span className="subscription-status-icon">
+                                                        {sub.isActive ? '🟢' : '⚫'}
+                                                    </span>
+                                                    <span className="subscription-details">
+                                                        {getAirportDisplayName(sub.flightDepartureAirportCode)} → {getAirportDisplayName(sub.flightArrivalAirportCode)}
+                                                        {sub.flightDepartureDate && (
+                                                            <span className="sub-date">
+                                                                on {format(new Date(sub.flightDepartureDate), 'dd MMM')}
+                                                            </span>
+                                                        )}
+                                                        <span className="sub-airline">{getAirlineDisplayName(sub.flightAirlineCode)}</span>
+                                                    </span>
+                                                    <span className="sub-price">Target: {sub.targetPrice.toFixed(0)}€</span>
+                                                    <button
+                                                        type="button"
+                                                        className="delete-sub-button"
+                                                        onClick={(event) => handleDeleteSubscription(sub.id, event)}
+                                                        title="Delete Subscription"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="no-subscriptions-message">You have no active flight price subscriptions.</p>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                        {formErrors.userExists && <p className="error-message-inline">{formErrors.userExists}</p>}
                     </>}
                 </fieldset>
                 <fieldset className="airport-selection-section full-span">
