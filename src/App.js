@@ -144,11 +144,13 @@ function App() {
               <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
               {theme === 'dark' ? t('lightMode') : t('darkMode')}
             </button>
-            <button type="button" className="account-auth-button" onClick={handleAccountAction}>
-              {!user && <img src={googleLogo} alt="" className="google-logo" />}
-              {user ? t('logOut') : t('logInWithGoogle')}
-            </button>
-            {authActionError && <p className="account-auth-error">{authActionError}</p>}
+            {isSearchPage && <>
+              <button type="button" className="account-auth-button" onClick={handleAccountAction}>
+                {!user && <img src={googleLogo} alt="" className="google-logo" />}
+                {user ? t('logOut') : t('logInWithGoogle')}
+              </button>
+              {authActionError && <p className="account-auth-error">{authActionError}</p>}
+            </>}
           </div>
         </div>
         <main className="main-content">
