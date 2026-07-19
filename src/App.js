@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import googleLogo from './assets/google-g.svg';
 import Toast from './Toast';
 import { LanguageContext, languages, translate } from './i18n';
+import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
 import './App.css';
 
@@ -77,7 +78,7 @@ function App() {
     setAuthActionError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: { redirectTo: `${window.location.origin}/search` },
     });
     if (error) throw error;
   };
@@ -117,12 +118,14 @@ function App() {
   }, [language, selectedLanguage.dir]);
 
   const isPrivacyPage = window.location.pathname.replace(/\/+$/, '') === '/privacy';
+  const isSearchPage = ['/search', '/auth/callback'].includes(window.location.pathname.replace(/\/+$/, ''));
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
       <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
         {isPrivacyPage ? <PrivacyPage /> : <>
           <div className="theme-controls">
+          {isSearchPage && <a className="home-link" href="/">{t('home')}</a>}
           <div className="language-selector" aria-label={t('language')}>
             {languages.map(({ code, label, flag }) => (
               <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
@@ -149,7 +152,7 @@ function App() {
           </div>
         </div>
         <main className="main-content">
-          <FlightSearchForm
+          {isSearchPage ? <FlightSearchForm
             theme={theme}
             user={user}
             onUserUpdated={setUser}
@@ -158,7 +161,7 @@ function App() {
             setUserSubscriptions={setUserSubscriptions}
             subscriptionsLoading={subscriptionsLoading}
             subscriptionsError={subscriptionsError}
-          />
+          /> : <LandingPage />}
         </main>
         <footer className="site-footer">
           <div className="footer-content">

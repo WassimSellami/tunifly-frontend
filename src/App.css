@@ -116,6 +116,17 @@ body,
   z-index: 1;
 }
 
+.home-link {
+  align-self: center;
+  color: var(--primary-button-bg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.home-link:hover {
+  text-decoration: underline;
+}
+
 .account-controls {
   display: flex;
   align-items: center;
@@ -196,6 +207,85 @@ body,
   width: 90%;
   margin: 0 auto;
   padding: 2rem;
+}
+
+.landing-page {
+  min-height: min(62vh, 620px);
+  display: grid;
+  place-items: center;
+}
+
+.landing-card {
+  width: min(100%, 760px);
+  padding: clamp(2rem, 6vw, 4.5rem);
+  text-align: center;
+  background: var(--section-background);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.landing-eyebrow {
+  margin-bottom: 0.5rem;
+  color: var(--primary-button-bg);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-card h1 {
+  margin: 0 0 1rem;
+}
+
+.landing-description {
+  color: var(--text-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.landing-sign-in-purpose {
+  margin: 1rem auto 0;
+  color: var(--legend-color);
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 2rem;
+}
+
+.landing-search-link,
+.landing-privacy-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.landing-search-link {
+  color: var(--primary-button-text);
+  background: var(--primary-button-bg);
+}
+
+.landing-privacy-link {
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+}
+
+.landing-search-link:hover,
+.landing-privacy-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
 .site-footer {
