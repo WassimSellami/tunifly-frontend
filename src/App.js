@@ -145,6 +145,7 @@ function App() {
               <a href="/privacy">{t('privacyPolicy')}</a>
               <a href={`mailto:wassimsellami20@gmail.com?subject=${encodeURIComponent(t('supportRequestSubject'))}`}>{t('contactUs')}</a>
             </nav>
+            <p className="footer-purpose">{t('appDescription')}</p>
             <p className="footer-copyright">{t('footerCopyright', { year: new Date().getFullYear() })}</p>
           </div>
         </footer>
