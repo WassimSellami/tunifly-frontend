@@ -237,17 +237,23 @@ body,
   margin: 0 0 0.5rem;
 }
 
-.welcome-message {
-  margin: 0;
-  color: var(--text-color);
-  font-size: 1.15rem;
-  font-weight: 600;
-}
-
 .homepage-description {
   margin: 0.75rem auto 0;
   color: var(--legend-color);
   line-height: 1.65;
+}
+
+.google-sign-in-purpose {
+  margin: 0.35rem 0 0;
+  color: var(--legend-color);
+  line-height: 1.65;
+}
+
+.welcome-message {
+  margin: 0.85rem 0 0;
+  color: var(--text-color);
+  font-size: 1.05rem;
+  font-weight: 600;
 }
 
 .footer-links {
