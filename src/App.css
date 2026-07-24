@@ -149,6 +149,15 @@ body,
   gap: 0.75rem;
 }
 
+.account-menu { position: relative; }
+
+.profile-button { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0; overflow: hidden; border: 2px solid var(--primary-button-bg); border-radius: 50%; background: var(--secondary-button-bg); color: var(--text-color); font-weight: 700; }
+.profile-button:hover { transform: none; box-shadow: none; }
+.account-details { position: absolute; z-index: 3; top: calc(100% + 0.5rem); right: 0; width: max-content; max-width: min(280px, 80vw); padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--section-background); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); color: var(--text-color); }
+.account-details strong, .account-details span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-details span { margin-top: 0.25rem; color: var(--legend-color); font-size: 0.82rem; }
+.account-menu-logout { width: 100%; margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--secondary-button-bg); color: var(--text-color); font-size: 0.9rem; }
+
 .language-selector {
   display: inline-flex;
   order: 2;

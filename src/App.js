@@ -11,6 +11,12 @@ import TermsPage from './TermsPage';
 import AlertsPage from './AlertsPage';
 import './App.css';
 
+const getAccountInitials = (user) => {
+  const value = (user.displayName || user.email || '').trim();
+  const initials = value.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('');
+  return (initials.length > 1 ? initials : value.slice(0, 2)).toUpperCase();
+};
+
 function App() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('theme') || 'light';
@@ -20,6 +26,7 @@ function App() {
   const [subscriptionsLoading, setSubscriptionsLoading] = useState(false);
   const [subscriptionsError, setSubscriptionsError] = useState(null);
   const [authActionError, setAuthActionError] = useState(null);
+  const [showAccountDetails, setShowAccountDetails] = useState(false);
   const [toast, setToast] = useState(null);
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname.replace(/\/+$/, ''));
@@ -68,6 +75,7 @@ function App() {
       id: sessionUser.id,
       email: sessionUser.email,
       displayName,
+      avatarUrl: sessionUser.user_metadata?.avatar_url || sessionUser.user_metadata?.picture,
     }));
     setSubscriptionsLoading(true);
     setSubscriptionsError(null);
@@ -176,10 +184,19 @@ function App() {
               <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
               {theme === 'dark' ? t('lightMode') : t('darkMode')}
             </button>
-            <button type="button" className="account-auth-button" onClick={handleAccountAction}>
+            {!user && <button type="button" className="account-auth-button" onClick={handleAccountAction}>
               {!user && <img src={googleLogo} alt="" className="google-logo" />}
-              {user ? t('logOut') : t('logInWithGoogle')}
-            </button>
+              {t('logInWithGoogle')}
+            </button>}
+            {user && <div className="account-menu">
+              <button type="button" className="profile-button" onClick={() => setShowAccountDetails((open) => !open)} aria-expanded={showAccountDetails} aria-label={user.email}>
+                <span>{getAccountInitials(user)}</span>
+              </button>
+              {showAccountDetails && <div className="account-details" role="dialog" aria-label={user.email}>
+                <strong>{user.displayName || user.email.split('@')[0]}</strong><span>{user.email}</span>
+                <button type="button" className="account-menu-logout" onClick={() => { setShowAccountDetails(false); handleAccountAction(); }}>{t('logOut')}</button>
+              </div>}
+            </div>}
             {authActionError && <p className="account-auth-error">{authActionError}</p>}
           </div>
         </div>
