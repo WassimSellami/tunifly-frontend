@@ -128,7 +128,7 @@ function App() {
       <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
         {isPrivacyPage ? <PrivacyPage /> : isTermsPage ? <TermsPage /> : <>
           <div className="theme-controls">
-          {isSearchPage && <a className="home-link" href="/">{t('home')}</a>}
+          {isSearchPage && <a className="home-link" href="/" aria-label={t('home')} title={t('home')}><img src="/logo120.png" alt="" /></a>}
           <div className="language-selector" aria-label={t('language')}>
             {languages.map(({ code, label, flag }) => (
               <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
