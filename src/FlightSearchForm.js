@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, fetchFlightById, fetchSubscriptions, updateCurrentUser } from './api';
+import { fetchAirlines, fetchAirports, searchFlights, deleteSubscription, fetchFlightById, updateCurrentUser } from './api';
 import { isBefore, isAfter, isSameDay, addDays, format, differenceInDays, addMonths, startOfDay, startOfMonth, endOfMonth } from 'date-fns';
 import { enUS, ar, de } from 'date-fns/locale';
 import FlightResultsDisplay from './FlightResultsDisplay';
@@ -48,7 +48,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
     const [error, setError] = useState(null);
     const [allAirports, setAllAirports] = useState([]);
     const [allAirlines, setAllAirlines] = useState([]);
-    const [isTunisiaDeparture, setIsTunisiaDeparture] = useState(true);
+    const [isTunisiaDeparture, setIsTunisiaDeparture] = useState(false);
     const [tunisianAirports, setTunisianAirports] = useState([]);
     const [germanAirports, setGermanAirports] = useState([]);
     const [selectedDepartureAirportCodes, setSelectedDepartureAirportCodes] = useState([]);
@@ -147,8 +147,8 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                 const deAirports = airports.filter(a => a.country === 'DE');
                 setTunisianAirports(tnAirports);
                 setGermanAirports(deAirports);
-                setSelectedDepartureAirportCodes(tnAirports.length > 0 ? [tnAirports[0].code] : []);
-                setSelectedArrivalAirportCodes(deAirports.length > 0 ? [deAirports[0].code] : []);
+                setSelectedDepartureAirportCodes(deAirports.length > 0 ? [deAirports[0].code] : []);
+                setSelectedArrivalAirportCodes(tnAirports.length > 0 ? [tnAirports[0].code] : []);
             } catch (err) {
                 setError("Failed to load initial data. " + err.message);
             } finally {
@@ -161,13 +161,11 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
     const loadAndEnrichSubscriptions = useCallback(async () => {
         if (!user) {
             setDisplaySubscriptions([]);
-            setUserSubscriptions([]);
             return;
         }
         setDisplaySubsLoading(true);
         try {
-            const rawSubs = await fetchSubscriptions();
-            const enrichedSubsPromises = rawSubs.map(async (sub) => {
+            const enrichedSubsPromises = userSubscriptions.map(async (sub) => {
                 try {
                     const flightDetails = await fetchFlightById(sub.flightId);
                     return {
@@ -197,17 +195,13 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
         } finally {
             setDisplaySubsLoading(false);
         }
-    }, [user, setUserSubscriptions]);
+    }, [user, userSubscriptions]);
 
     useEffect(() => {
         if (user) {
             loadAndEnrichSubscriptions();
         }
     }, [user, loadAndEnrichSubscriptions]);
-
-    useEffect(() => {
-        setUserSubscriptions(displaySubscriptions);
-    }, [displaySubscriptions, setUserSubscriptions]);
 
     useEffect(() => {
         if (!loading && searchResults && Object.keys(searchResults).length > 0) {
@@ -315,6 +309,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
             try {
                 await deleteSubscription(subId);
                 setDisplaySubscriptions(prevSubs => prevSubs.filter(sub => sub.id !== subId));
+                setUserSubscriptions(prevSubs => prevSubs.filter(sub => sub.id !== subId));
                 showToast('Subscription deleted successfully!');
             } catch (err) {
                 showToast('Failed to delete subscription: ' + err.message, 'error');

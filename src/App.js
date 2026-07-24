@@ -70,7 +70,9 @@ function App() {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => loadAuthenticatedUser(session));
+    // Supabase emits INITIAL_SESSION as soon as this listener is registered, so
+    // it is the single source of truth for the initial session and later auth
+    // changes. Calling getSession() here as well caused duplicate API loads.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => loadAuthenticatedUser(session));
     return () => subscription.unsubscribe();
   }, [loadAuthenticatedUser]);
