@@ -8,6 +8,7 @@ import { LanguageContext, languages, translate } from './i18n';
 import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
+import AlertsPage from './AlertsPage';
 import './App.css';
 
 function App() {
@@ -21,9 +22,32 @@ function App() {
   const [authActionError, setAuthActionError] = useState(null);
   const [toast, setToast] = useState(null);
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname.replace(/\/+$/, ''));
   const authLoadIdRef = useRef(0);
   const selectedLanguage = languages.find(({ code }) => code === language) || languages[0];
   const t = (key, values) => translate(language, key, values);
+
+  const navigate = useCallback((path) => {
+    if (window.location.pathname === path) return;
+    window.history.pushState({}, '', path);
+    setCurrentPath(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
+  const handleInternalNavigation = useCallback((event) => {
+    if (event.defaultPrevented) return;
+    const link = event.target.closest('a[href]');
+    const path = link?.getAttribute('href');
+    if (!path || !path.startsWith('/')) return;
+    event.preventDefault();
+    navigate(path);
+  }, [navigate]);
+
+  useEffect(() => {
+    const handlePopState = () => setCurrentPath(window.location.pathname.replace(/\/+$/, ''));
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const loadAuthenticatedUser = useCallback(async (session) => {
     const loadId = ++authLoadIdRef.current;
@@ -81,7 +105,7 @@ function App() {
     setAuthActionError(null);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/search` },
+      options: { redirectTo: `${window.location.origin}${isAlertsPage ? '/alerts' : '/search'}` },
     });
     if (error) throw error;
   };
@@ -120,21 +144,24 @@ function App() {
     document.documentElement.dir = selectedLanguage.dir;
   }, [language, selectedLanguage.dir]);
 
-  const currentPath = window.location.pathname.replace(/\/+$/, '');
   const isPrivacyPage = currentPath === '/privacy';
   const isTermsPage = currentPath === '/terms';
   const isSearchPage = ['/search', '/auth/callback'].includes(currentPath);
+  const isAlertsPage = currentPath === '/alerts';
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
-      <div className={`App ${theme}-theme`} dir={selectedLanguage.dir}>
-        {isPrivacyPage ? <PrivacyPage /> : isTermsPage ? <TermsPage /> : <>
-          <div className="theme-controls">
-          {isSearchPage && <a className="home-link" href="/" aria-label={t('home')} title={t('home')}><img src="/logo120.png" alt="" /></a>}
+      <div className={`App ${theme}-theme`} dir={selectedLanguage.dir} onClick={handleInternalNavigation}>
+        <div className="theme-controls">
+          <a className="home-link" href="/" onClick={(event) => { event.preventDefault(); navigate('/'); }} aria-label={t('home')} title={t('home')}><img src="/logo120.png" alt="" /></a>
+          <nav className="top-navigation" aria-label={t('appNavigation')}>
+            <a className={isSearchPage ? 'active' : ''} href="/search" onClick={(event) => { event.preventDefault(); navigate('/search'); }}>{t('searchFlights')}</a>
+            <a className={isAlertsPage ? 'active' : ''} href="/alerts" onClick={(event) => { event.preventDefault(); navigate('/alerts'); }}>{t('myPriceAlerts')}</a>
+          </nav>
           <div className="language-selector" aria-label={t('language')}>
-            {languages.map(({ code, label, flag }) => (
+            {languages.map(({ code, label }) => (
               <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
-                <img className="language-flag" src={flag} alt="" aria-hidden="true" /><span className="language-label">{label}</span>
+                <span className="language-label">{code.toUpperCase()}</span>
               </button>
             ))}
           </div>
@@ -149,17 +176,15 @@ function App() {
               <span aria-hidden="true">{theme === 'dark' ? '☀️' : '🌙'}</span>
               {theme === 'dark' ? t('lightMode') : t('darkMode')}
             </button>
-            {isSearchPage && <>
-              <button type="button" className="account-auth-button" onClick={handleAccountAction}>
-                {!user && <img src={googleLogo} alt="" className="google-logo" />}
-                {user ? t('logOut') : t('logInWithGoogle')}
-              </button>
-              {authActionError && <p className="account-auth-error">{authActionError}</p>}
-            </>}
+            <button type="button" className="account-auth-button" onClick={handleAccountAction}>
+              {!user && <img src={googleLogo} alt="" className="google-logo" />}
+              {user ? t('logOut') : t('logInWithGoogle')}
+            </button>
+            {authActionError && <p className="account-auth-error">{authActionError}</p>}
           </div>
         </div>
         <main className="main-content">
-          {isSearchPage ? <FlightSearchForm
+          {isPrivacyPage ? <PrivacyPage /> : isTermsPage ? <TermsPage /> : isSearchPage ? <FlightSearchForm
             theme={theme}
             user={user}
             onUserUpdated={setUser}
@@ -168,7 +193,16 @@ function App() {
             setUserSubscriptions={setUserSubscriptions}
             subscriptionsLoading={subscriptionsLoading}
             subscriptionsError={subscriptionsError}
-          /> : <LandingPage />}
+          /> : isAlertsPage ? <AlertsPage
+            theme={theme}
+            user={user}
+            onUserUpdated={setUser}
+            showToast={showToast}
+            userSubscriptions={userSubscriptions}
+            setUserSubscriptions={setUserSubscriptions}
+            subscriptionsLoading={subscriptionsLoading}
+            subscriptionsError={subscriptionsError}
+          /> : <LandingPage onNavigate={navigate} />}
         </main>
         <footer className="site-footer">
           <div className="footer-content">
@@ -181,8 +215,7 @@ function App() {
             <p className="footer-copyright">{t('footerCopyright', { year: new Date().getFullYear() })}</p>
           </div>
         </footer>
-          <Toast toast={toast} />
-        </>}
+        <Toast toast={toast} />
       </div>
     </LanguageContext.Provider>
   );

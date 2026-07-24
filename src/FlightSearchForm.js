@@ -384,13 +384,8 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
 
     return (
         <div className="flight-search-container">
-            {user && (
-                <header className="app-identity">
-                    <h1>{t('hiUser', { name: (user.displayName || user.email.split('@')[0]).trim().split(/\s+/)[0] })}</h1>
-                </header>
-            )}
             <form onSubmit={handleSubmit} className="form-grid">
-                <fieldset className="email-section full-span">
+                {false && <fieldset className="email-section full-span">
                     <legend>{t('subscription')}</legend>
                     {!user && (
                         <div className="save-user-section">
@@ -530,9 +525,9 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                         )}
                         {formErrors.userExists && <p className="error-message-inline">{formErrors.userExists}</p>}
                     </>}
-                </fieldset>
+                </fieldset>}
                 <fieldset className="airport-selection-section full-span">
-                    <legend>{t('airports')}</legend>
+                    <legend>{t('airports')} ({t('multiSelect')})</legend>
                     <div className="airport-selection-grid">
                         <div className="departure-airports-column">
                             <h3>{t('departure')} {t(isTunisiaDeparture ? 'tunisia' : 'germany')}</h3>

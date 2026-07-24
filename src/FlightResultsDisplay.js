@@ -158,10 +158,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, isAuthenticated
     return (
         <>
             <div className="flight-results-container">
-                <h2>
-                    {t('trends')}
-                    <span className="click-details-text"> {t('clickDetails')}</span>
-                </h2>
+                <h2>{t('clickDetails')}</h2>
                 <div className="results-grid">
                     {Object.keys(groupedFlights).sort().map(route => {
                         const flightsForRoute = groupedFlights[route];
@@ -300,7 +297,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, isAuthenticated
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: `${t('pricesForRoute')} ${chartRouteTitle}`,
+                                    text: chartRouteTitle,
                                     color: chartTitleColor,
                                     font: { size: 20, weight: 'bold' },
                                     padding: { top: 10, bottom: 40 }
