@@ -148,14 +148,67 @@ body,
   gap: 0.75rem;
 }
 
-.account-menu { position: relative; }
+.account-menu {
+  position: relative;
+}
 
-.profile-button { display: inline-flex; align-items: center; justify-content: center; width: 2.5rem; height: 2.5rem; padding: 0; overflow: hidden; border: 2px solid var(--primary-button-bg); border-radius: 50%; background: var(--secondary-button-bg); color: var(--text-color); font-weight: 700; }
-.profile-button:hover { transform: none; box-shadow: none; }
-.account-details { position: absolute; z-index: 3; top: calc(100% + 0.5rem); right: 0; width: max-content; max-width: min(280px, 80vw); padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; background: var(--section-background); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2); color: var(--text-color); }
-.account-details strong, .account-details span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.account-details span { margin-top: 0.25rem; color: var(--legend-color); font-size: 0.82rem; }
-.account-menu-logout { width: 100%; margin-top: 0.75rem; padding: 0.5rem 0.75rem; background: var(--secondary-button-bg); color: var(--text-color); font-size: 0.9rem; }
+.profile-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--primary-button-bg);
+  border-radius: 50%;
+  background: var(--secondary-button-bg);
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+.profile-button:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.account-details {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: max-content;
+  max-width: min(280px, 80vw);
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--section-background);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  color: var(--text-color);
+}
+
+.account-details strong,
+.account-details span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-details span {
+  margin-top: 0.25rem;
+  color: var(--legend-color);
+  font-size: 0.82rem;
+}
+
+.account-menu-logout {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary-button-bg);
+  color: var(--text-color);
+  font-size: 0.9rem;
+}
 
 .language-selector {
   display: inline-flex;
@@ -1255,7 +1308,9 @@ textarea:focus,
   }
 
   .footer-brand,
-  .footer-copyright { justify-self: center; }
+  .footer-copyright {
+    justify-self: center;
+  }
 
   .main-content {
     width: 100%;
@@ -1457,18 +1512,78 @@ textarea:focus,
 }
 
 @media (max-width: 900px) {
-  .theme-controls { grid-template-columns: auto 1fr auto; }
-  .top-navigation { grid-column: 1 / -1; grid-row: 2; justify-self: center; margin-top: 0.25rem; }
-  .language-selector { justify-self: end; }
+  .theme-controls {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .home-link,
+  .language-selector,
+  .account-controls {
+    grid-column: auto;
+  }
+
+  .top-navigation {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: center;
+    margin-top: 0.25rem;
+  }
+
+  .language-selector {
+    justify-self: end;
+  }
+}
+
+@media (min-width: 1401px) {
+  .home-link {
+    grid-column: 1;
+  }
+
+  .language-selector {
+    grid-column: 3;
+  }
+
+  .account-controls {
+    grid-column: 4;
+  }
+
+  .top-navigation {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 @media (max-width: 640px) {
-  .theme-controls { display: grid; grid-template-columns: auto 1fr auto; }
-  .top-navigation { grid-column: 1 / -1; grid-row: 2; width: 100%; justify-self: stretch; }
-  .top-navigation a { min-width: 0; }
-  .account-controls { gap: 0.4rem; }
-  .theme-toggle { padding: 0.55rem 0.65rem; font-size: 0.9rem; }
-  .account-auth-button { padding: 0.55rem 0.7rem; font-size: 0.9rem; }
+  .theme-controls {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .top-navigation {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .top-navigation a {
+    min-width: 0;
+  }
+
+  .account-controls {
+    gap: 0.4rem;
+  }
+
+  .theme-toggle {
+    padding: 0.55rem 0.65rem;
+    font-size: 0.9rem;
+  }
+
+  .account-auth-button {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+  }
 }
 
 .alerts-page {
