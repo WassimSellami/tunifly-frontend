@@ -16,7 +16,7 @@ export default function AlertsPage({ theme, user, onUserUpdated, showToast, user
   const loadSubscriptions = useCallback(async () => {
     if (!user) return setDisplaySubscriptions([]);
     setLoading(true);
-    try { setDisplaySubscriptions(await Promise.all(userSubscriptions.map(async (sub) => { try { return { ...sub, ...(await fetchFlightById(sub.flightId)) }; } catch { return sub; } }))); }
+    try { setDisplaySubscriptions(await Promise.all(userSubscriptions.map(async (sub) => { try { return { ...sub, ...(await fetchFlightById(sub.flightId)), subscriptionId: sub.id }; } catch { return { ...sub, subscriptionId: sub.id }; } }))); }
     finally { setLoading(false); }
   }, [user, userSubscriptions]);
   useEffect(() => { loadSubscriptions(); }, [loadSubscriptions]);
@@ -43,7 +43,7 @@ export default function AlertsPage({ theme, user, onUserUpdated, showToast, user
     </section>
     {(loading || subscriptionsLoading) && <p className="info-message">{t('loadingAlerts')}</p>}{subscriptionsError && <p className="error-message-inline">{subscriptionsError}</p>}
     {!loading && !subscriptionsLoading && !displaySubscriptions.length && <div className="alerts-empty-state"><p>{t('noTrackedFlights')}</p><a className="alerts-search-link" href="/search">{t('searchFlights')}</a></div>}
-    <ul className="alerts-list">{displaySubscriptions.map((sub) => <li key={sub.id} className="alert-card"><button type="button" className="alert-card-main" onClick={() => setSelectedFlight(sub)}><span className="subscription-status-icon">{sub.isActive ? '🟢' : '⚫'}</span><span><strong>{airport(sub.departureAirportCode)} → {airport(sub.arrivalAirportCode)}</strong><small>{sub.departureDate && format(new Date(sub.departureDate), 'dd MMM yyyy')} {airline(sub.airlineCode)}</small></span><span className="sub-price">{t('target')} {Number(sub.targetPrice).toFixed(0)}€</span></button><button type="button" className="delete-sub-button" onClick={() => removeAlert(sub.id)} title={t('deleteSubscription')} aria-label={t('deleteSubscription')}>×</button></li>)}</ul>
+    <ul className="alerts-list">{displaySubscriptions.map((sub) => <li key={sub.subscriptionId} className="alert-card"><button type="button" className="alert-card-main" onClick={() => setSelectedFlight(sub)}><span className="subscription-status-icon">{sub.isActive ? '🟢' : '⚫'}</span><span><strong>{airport(sub.departureAirportCode)} → {airport(sub.arrivalAirportCode)}</strong><small>{sub.departureDate && format(new Date(sub.departureDate), 'dd MMM yyyy')} {airline(sub.airlineCode)}</small></span><span className="sub-price">{t('target')} {Number(sub.targetPrice).toFixed(0)}€</span></button><button type="button" className="delete-sub-button" onClick={() => removeAlert(sub.subscriptionId)} title={t('deleteSubscription')} aria-label={t('deleteSubscription')}>×</button></li>)}</ul>
     {selectedFlight && <FlightDetailModal theme={theme} flight={selectedFlight} onClose={() => setSelectedFlight(null)} airlines={airlines} isAuthenticated userSubscriptions={userSubscriptions} setUserSubscriptions={setUserSubscriptions} showToast={showToast} />}
   </section>;
 }
