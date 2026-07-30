@@ -158,8 +158,13 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
 
     const handleSetAlert = async () => {
         const parsedTargetPrice = Number(targetPrice);
-        if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice <= 0) {
+        const currentFlightPrice = Number(flight?.priceEur);
+        if (!Number.isFinite(parsedTargetPrice) || parsedTargetPrice < 1) {
             setSubscriptionFeedback({ type: 'error', text: t('targetPriceInvalid') });
+            return;
+        }
+        if (!Number.isFinite(currentFlightPrice) || parsedTargetPrice >= currentFlightPrice) {
+            setSubscriptionFeedback({ type: 'error', text: t('targetPriceMustBeBelowCurrent', { price: currentFlightPrice }) });
             return;
         }
 
@@ -318,8 +323,15 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                                     type="number"
                                     placeholder={currentSubscription ? t('currentAlert', { price: currentSubscription.targetPrice.toFixed(0) }) : t('targetPrice')}
                                     value={targetPrice}
-                                    onChange={e => setTargetPrice(e.target.value)}
+                                    onChange={e => {
+                                        setTargetPrice(e.target.value);
+                                        setSubscriptionFeedback(null);
+                                    }}
                                     className="target-price-input"
+                                    min="1"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    aria-invalid={subscriptionFeedback?.type === 'error'}
                                     disabled={submitting || !isAuthenticated}
                                 />
                                 <button type="button" className="action-button" onClick={handleSetAlert} disabled={submitting || !isAuthenticated}>
