@@ -31,6 +31,7 @@ function App() {
   const [language, setLanguage] = useState(() => localStorage.getItem('language') || 'en');
   const [currentPath, setCurrentPath] = useState(() => window.location.pathname.replace(/\/+$/, ''));
   const authLoadIdRef = useRef(0);
+  const loadedSessionUserIdRef = useRef(null);
   const selectedLanguage = languages.find(({ code }) => code === language) || languages[0];
   const t = (key, values) => translate(language, key, values);
 
@@ -56,9 +57,10 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  const loadAuthenticatedUser = useCallback(async (session) => {
-    const loadId = ++authLoadIdRef.current;
+  const loadAuthenticatedUser = useCallback(async (session, { force = false } = {}) => {
     if (!session) {
+      ++authLoadIdRef.current;
+      loadedSessionUserIdRef.current = null;
       setUser(null);
       setUserSubscriptions([]);
       setSubscriptionsLoading(false);
@@ -66,6 +68,9 @@ function App() {
     }
 
     const sessionUser = session.user;
+    if (!force && loadedSessionUserIdRef.current === sessionUser.id) return;
+    const loadId = ++authLoadIdRef.current;
+    loadedSessionUserIdRef.current = sessionUser.id;
     const displayName = sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || sessionUser.email?.split('@')[0] || 'TuniFly user';
 
     // Supabase session state is authoritative for sign-in. Do not make the UI
@@ -102,10 +107,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // Supabase emits INITIAL_SESSION as soon as this listener is registered, so
-    // it is the single source of truth for the initial session and later auth
-    // changes. Calling getSession() here as well caused duplicate API loads.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => loadAuthenticatedUser(session));
+    // Auth events are not all data-invalidating. In particular, Supabase may
+    // refresh a token after a tab regains focus. The new token is managed by
+    // Supabase; fetching the user's profile and alerts again is unnecessary.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        loadAuthenticatedUser(session);
+      } else if (event === 'USER_UPDATED') {
+        loadAuthenticatedUser(session, { force: true });
+      }
+    });
     return () => subscription.unsubscribe();
   }, [loadAuthenticatedUser]);
 
