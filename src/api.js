@@ -2,8 +2,6 @@ import { supabase } from './supabase';
 
 const BASE_URL = process.env.API_BASE_URL;
 
-// Reference data changes infrequently, so share it across routes and browser
-// tabs instead of fetching it every time a component mounts.
 const REFERENCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_TTL_MS = 60 * 1000;
 const FLIGHT_CACHE_TTL_MS = 5 * 60 * 1000;
