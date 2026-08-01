@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const BASE_URL = 'https://tunifly-backend-d67d3.ondigitalocean.app';
+const BASE_URL = process.env.API_BASE_URL;
 
 // Reference data changes infrequently, so share it across routes and browser
 // tabs instead of fetching it every time a component mounts.
