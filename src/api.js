@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 
-const BASE_URL = process.env.API_BASE_URL;
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 const REFERENCE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const SEARCH_CACHE_TTL_MS = 60 * 1000;
