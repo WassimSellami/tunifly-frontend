@@ -19,6 +19,7 @@ import {
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { useLanguage } from './i18n';
+import { capture } from './analytics';
 
 ChartJS.register(
     CategoryScale,
@@ -296,6 +297,14 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                 return acc;
             }, {});
             setSearchResults(groupedResults);
+            capture('flight_search', {
+                departure_airports: selectedDepartureAirportCodes,
+                arrival_airports: selectedArrivalAirportCodes,
+                start_date: format(startDate, 'yyyy-MM-dd'),
+                end_date: format(endDate, 'yyyy-MM-dd'),
+                airlines: selectedAirlineCodes,
+                result_count: flights.length,
+            });
         } catch (err) {
             setError("Failed to fetch flights. " + err.message);
         } finally {

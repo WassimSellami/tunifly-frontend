@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { createSubscription, fetchPriceHistory, updateSubscription } from './api';
+import { capture } from './analytics';
 import './FlightDetailModal.css';
 
 import tuLogo from './assets/tu_logo.png';
@@ -86,7 +87,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
     const [submitting, setSubmitting] = useState(false);
     const [subscriptionFeedback, setSubscriptionFeedback] = useState(null);
     const [isSmallScreen, setIsSmallScreen] = useState(() => window.innerWidth <= 640);
-    const currentPriceTimestamp = useMemo(() => new Date(), [flight?.id, flight?.priceEur]);
+    const [currentPriceTimestamp, setCurrentPriceTimestamp] = useState(() => new Date());
     const currentSubscription = useMemo(
         () => userSubscriptions.find(subscription => subscription.flightId === flight?.id),
         [flight?.id, userSubscriptions]
@@ -120,6 +121,30 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
             { x: currentPriceTimestamp, y: flight.priceEur }
         ];
     }, [history, flight.priceEur, currentPriceTimestamp]);
+
+    useEffect(() => {
+        if (!flight?.id) return;
+        capture('flight_viewed', {
+            flight_id: flight.id,
+            departure_airport: flight.departureAirportCode,
+            arrival_airport: flight.arrivalAirportCode,
+            airline: flight.airlineCode,
+        });
+    }, [flight]);
+
+    useEffect(() => {
+        setCurrentPriceTimestamp(new Date());
+    }, [flight?.id, flight?.priceEur]);
+
+    const handleBookingClick = () => {
+        if (!flight.bookingUrl) return;
+        capture('booking_link_clicked', {
+            flight_id: flight.id,
+            departure_airport: flight.departureAirportCode,
+            arrival_airport: flight.arrivalAirportCode,
+            airline: flight.airlineCode,
+        });
+    };
 
     const priceAnalytics = useMemo(() => {
         if (history.length < 2) return null;
@@ -159,11 +184,12 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
         let isCurrentFlight = true;
 
         const loadModalData = async () => {
-            if (!flight || !flight.id) return;
+            const flightId = flight?.id;
+            if (!flightId) return;
             setLoading(true);
             setHistory([]);
             try {
-                const historyData = await fetchPriceHistory(flight.id);
+                const historyData = await fetchPriceHistory(flightId);
                 if (isCurrentFlight) setHistory(historyData);
             } catch (err) { console.error("Failed to load flight history:", err); }
             finally {
@@ -386,7 +412,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                         </div>
                         <div className="book-now-container">
                             <h3>{t('readyToBook')}</h3>
-                            <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>{t('bookNow')}</a>
+                            <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" onClick={handleBookingClick} className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>{t('bookNow')}</a>
                         </div>
                     </div>
                 </div>

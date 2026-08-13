@@ -1,0 +1,35 @@
+{
+  "file_hashes": {
+    "README.md": "1a0f57a0d7f2250a426b54c45af3752109acc774b64436b753b15b421a163072",
+    "public/manifest.json": "07a1dba786e5a23c59536941ae5506cdc7aa38b097b6fd11bb354e8f3abf8a72",
+    "src/AlertsPage.js": "7aa719c338e5585b858035941a40b275926368d46b2d5f6cca78c7b8db09c2f3",
+    "src/App.css": "c40ce0f12b5b427f2426f44daa41e7b67bc6caca4e82a6ddc8fa935f813e876d",
+    "src/App.js": "73bef0974212fc43a52edd8b7e14f6f8a743e1e583ba533b631a436af9b6ce13",
+    "src/App.test.js": "f4c9beb3a7fa8ffb55639c648d42ebe292649df9d9098a3f686006699421be5f",
+    "src/CustomDatePicker.css": "5337421ae591cdf9b4c3457cc0df2a573c4b4e8c5311200c2da9c9b0b46e5f34",
+    "src/FlightDetailModal.css": "dde58d1c190ca80f3b744207e42439e3f1aaa0539e34d0d7c0530b1c9fbf4015",
+    "src/FlightDetailModal.js": "b8c8cca36bd81e2a625e580749a40f01daf75e8ba5893236685732ed870fbe5d",
+    "src/FlightResultsDisplay.js": "2446415cf9861da21f6d8e81c68a023803cbdd9be2e6a9e22e289bc57940097d",
+    "src/FlightSearchForm.js": "f600f21d5f391df03618f0b5b88e0b24482b2697db79ca10d6dcfefe24609661",
+    "src/LandingPage.js": "1067e387638075a2652eb6c7223fb0f0a00c1d6ed5b18419a5bcadb708fc1157",
+    "src/PrivacyPage.js": "ad426724a9897f29e680de91b3ac8cdd8f8cfc9a124dde115a0111b581777c12",
+    "src/TermsPage.js": "4bcb82e841c694fdb3634c130c70b421b4b1236efc794165a515717c57d034c4",
+    "src/Toast.js": "25fe09bfc266f62d72933cf72b2bbc9d13e057ddf913804446c92a7b1f7a4aab",
+    "src/api.js": "53ca148e7259462c4feeab6b18ba22b8f42e4f5f07f3ae466c495403caab30b4",
+    "src/i18n.js": "669ff3594a80f92beaa60023f5763eb233dadb2a57601a34504ba6828791969f",
+    "src/index.css": "81e97c584ef810f52eb79d06ca816ef4e2b09e1119c5058caaa665db350e3fec",
+    "src/index.js": "44ad1bbd626c8990450287a194046328236710e76521ffceae59cdf043e86953",
+    "src/reportWebVitals.js": "8f739dbe032c8ee46e961c7da50ff9df3c5168e13b3f1894a10b0bf123ff8c28",
+    "src/setupTests.js": "a0b025b2b9df8ec6e2bbaa26937c93209e6cf7f3ce886809ea52e868bfb7fe15",
+    "src/supabase.js": "33d1f7c837c6af7172cbbc91e4df58884b8042c2e4c9dbc435a2312a9797d8b4"
+  },
+  "indexed_at_commit": "971043e1f9470b0abf88e7ed638607d591045492",
+  "indexed_at_timestamp": "2026-08-13T16:58:38.512831100+00:00",
+  "schema_version": 3,
+  "stats": {
+    "total_edges": 498,
+    "total_files": 22,
+    "total_nodes": 465
+  },
+  "vexp_version": "2.6.0"
+}

@@ -9,6 +9,7 @@ import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
 import AlertsPage from './AlertsPage';
+import { capturePageView } from './analytics';
 import './App.css';
 
 const getAccountInitials = (user) => {
@@ -167,6 +168,10 @@ function App() {
   const isTermsPage = currentPath === '/terms';
   const isSearchPage = ['/search', '/auth/callback'].includes(currentPath);
   const isAlertsPage = currentPath === '/alerts';
+
+  useEffect(() => {
+    capturePageView(currentPath || '/');
+  }, [currentPath]);
 
   return (
     <LanguageContext.Provider value={{ language, t }}>
