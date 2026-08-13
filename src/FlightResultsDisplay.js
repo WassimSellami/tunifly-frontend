@@ -341,7 +341,7 @@ const FlightResultsDisplay = ({ theme, groupedFlights, airlines, isAuthenticated
                             <div key={route} className="chart-card">
                                 <div className="chart-plot" dir="ltr">
                                     {paginatedFlights.length > 0 ? (
-                                        <Bar key={`${route}-${loadedIconCount}`} data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
+                                        <Bar key={`${route}-${currentPage}-${loadedIconCount}`} data={data} options={options} plugins={[iconPlugin, ChartDataLabels]} />
                                     ) : (
                                         <p className="info-message">{t('noRouteData')}</p>
                                     )}

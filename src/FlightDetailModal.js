@@ -24,7 +24,7 @@ const airlineLogos = {
 };
 
 const AirlineDisplay = ({ code, name }) => {
-    const logoSrc = airlineLogos[code];
+    const logoSrc = airlineLogos[code?.toUpperCase()];
     return (
         <div className="airline-display">
             {logoSrc ? (
@@ -291,7 +291,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
 
     if (!flight) return null;
 
-    const airline = airlines.find(a => a.code === flight.airlineCode);
+    const airline = airlines.find(a => a.code?.toUpperCase() === flight.airlineCode?.toUpperCase());
     const departureDateFormatted = format(parseISO(flight.departureDate), 'EEE, dd MMM yyyy');
     const chartData = {
         datasets: [{
