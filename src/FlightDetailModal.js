@@ -94,6 +94,32 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
     const isDarkTheme = theme === 'dark';
     const chartTickColor = isDarkTheme ? '#909090' : '#666666';
     const chartGridColor = isDarkTheme ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.12)';
+    const chartHistory = useMemo(() => {
+        if (history.length > 1) {
+            const pointsByTimestamp = new Map();
+            history.forEach(({ timestamp, priceEur }) => {
+                const date = parseISO(timestamp);
+                pointsByTimestamp.set(date.getTime(), { x: date, y: priceEur });
+            });
+
+            return [
+                ...[...pointsByTimestamp.values()].sort((a, b) => a.x - b.x),
+                { x: currentPriceTimestamp, y: flight.priceEur }
+            ];
+        }
+
+        if (history.length === 1) {
+            return [
+                { x: parseISO(history[0].timestamp), y: history[0].priceEur },
+                { x: currentPriceTimestamp, y: flight.priceEur }
+            ];
+        }
+
+        return [
+            { x: new Date(currentPriceTimestamp.getTime() - 5 * 24 * 60 * 60 * 1000), y: flight.priceEur },
+            { x: currentPriceTimestamp, y: flight.priceEur }
+        ];
+    }, [history, flight.priceEur, currentPriceTimestamp]);
 
     const priceAnalytics = useMemo(() => {
         if (history.length < 2) return null;
@@ -130,17 +156,24 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
 
 
     useEffect(() => {
+        let isCurrentFlight = true;
+
         const loadModalData = async () => {
             if (!flight || !flight.id) return;
             setLoading(true);
+            setHistory([]);
             try {
                 const historyData = await fetchPriceHistory(flight.id);
-                setHistory(historyData);
+                if (isCurrentFlight) setHistory(historyData);
             } catch (err) { console.error("Failed to load flight history:", err); }
-            setLoading(false);
+            finally {
+                if (isCurrentFlight) setLoading(false);
+            }
         };
         loadModalData();
-    }, [flight]);
+
+        return () => { isCurrentFlight = false; };
+    }, [flight?.id]);
 
     useEffect(() => {
         setTargetPrice(currentSubscription ? currentSubscription.targetPrice.toFixed(0) : '');
@@ -189,9 +222,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
     };
 
     const chartOptions = useMemo(() => {
-        if (!priceAnalytics || history.length === 0) return {};
-
-        const timestamps = [...history.map(h => parseISO(h.timestamp).getTime()), currentPriceTimestamp.getTime()];
+        const timestamps = [...chartHistory.map(point => point.x.getTime()), currentPriceTimestamp.getTime()];
         const minTimestamp = Math.min(...timestamps);
         const maxTimestamp = Math.max(...timestamps);
 
@@ -206,13 +237,14 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
         const xMin = minTimestamp - startPaddingMs;
         const xMax = maxTimestamp + endPaddingMs;
 
-        const { minPrice, maxPrice } = priceAnalytics;
-        const chartMinPrice = Math.min(minPrice, flight.priceEur);
-        const chartMaxPrice = Math.max(maxPrice, flight.priceEur);
+        const prices = chartHistory.map(point => point.y);
+        const chartMinPrice = Math.min(...prices);
+        const chartMaxPrice = Math.max(...prices);
         const range = chartMaxPrice - chartMinPrice;
         const stepSize = range > 100 ? 25 : (range > 50 ? 10 : 5);
-        const yMin = Math.floor(chartMinPrice / stepSize) * stepSize - stepSize / 2;
-        const yMax = Math.ceil(chartMaxPrice / stepSize) * stepSize + stepSize / 2;
+        const padding = range > 0 ? stepSize / 2 : Math.max(stepSize / 2, chartMinPrice * 0.05);
+        const yMin = Math.floor((chartMinPrice - padding) / stepSize) * stepSize;
+        const yMax = Math.ceil((chartMaxPrice + padding) / stepSize) * stepSize;
 
         return {
             responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
@@ -255,7 +287,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                 }
             }
         };
-    }, [priceAnalytics, history, isSmallScreen, flight.priceEur, currentPriceTimestamp, isDarkTheme, chartGridColor, chartTickColor]);
+    }, [chartHistory, currentPriceTimestamp, isSmallScreen, isDarkTheme, chartGridColor, chartTickColor]);
 
     if (!flight) return null;
 
@@ -263,7 +295,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
     const departureDateFormatted = format(parseISO(flight.departureDate), 'EEE, dd MMM yyyy');
     const chartData = {
         datasets: [{
-            label: 'Price History', data: history.map(h => ({ x: parseISO(h.timestamp), y: h.priceEur })),
+            label: 'Price History', data: chartHistory,
             borderColor: '#88aaff', backgroundColor: 'rgba(136, 170, 255, 0.15)',
             fill: true, tension: 0.1, pointRadius: 0, pointHoverRadius: 6,
             pointHoverBackgroundColor: '#88aaff', pointHoverBorderColor: '#fff', pointHoverBorderWidth: 2
@@ -293,7 +325,7 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                     <div className="price-history-section">
                         <h3>{t('history')}</h3>
                         <div className="modal-chart-container" dir="ltr">
-                            {!loading && chartData.datasets[0].data.length > 1 ? (<Line options={chartOptions} data={chartData} />) : (<p>{t('loadingChart')}</p>)}
+                            {!loading ? (<Line options={chartOptions} data={chartData} />) : (<p>{t('loadingChart')}</p>)}
                         </div>
                     </div>
                 </div>
@@ -305,10 +337,14 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                     </div>
 
                     <div className="price-analysis-section">
-                        <h2 className="price-analysis-header">{t('pricesCurrently')} <span className={`price-status ${priceAnalytics?.status || ''}`}>{currentStatusKey ? t(`currentStatus${currentStatusKey}`) : '...'}</span></h2>
-                        <p className="price-range-info">
-                            {t('similarTrips', { low: priceAnalytics?.lowThreshold.toFixed(0), high: priceAnalytics?.highThreshold.toFixed(0) })}
-                        </p>
+                        <h2 className="price-analysis-header">
+                            {currentStatusKey ? <>{t('pricesCurrently')} <span className={`price-status ${priceAnalytics.status}`}>{t(`currentStatus${currentStatusKey}`)}</span></> : t('noPriceHistory')}
+                        </h2>
+                        {priceAnalytics && (
+                            <p className="price-range-info">
+                                {t('similarTrips', { low: priceAnalytics.lowThreshold.toFixed(0), high: priceAnalytics.highThreshold.toFixed(0) })}
+                            </p>
+                        )}
                     </div>
 
                     <div className="price-gauge-wrapper">
