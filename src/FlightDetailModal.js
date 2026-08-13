@@ -234,6 +234,14 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                 ? await updateSubscription(currentSubscription.id, { targetPrice: parsedTargetPrice, isActive: true })
                 : await createSubscription({ flightId: flight.id, targetPrice: parsedTargetPrice, isActive: true });
 
+            capture(currentSubscription ? 'price_alert_updated' : 'price_alert_created', {
+                flight_id: flight.id,
+                departure_airport: flight.departureAirportCode,
+                arrival_airport: flight.arrivalAirportCode,
+                airline: flight.airlineCode,
+                active: true,
+            });
+
             setUserSubscriptions?.(previousSubscriptions => {
                 const withoutCurrentFlight = previousSubscriptions.filter(subscription => subscription.flightId !== flight.id);
                 return [...withoutCurrentFlight, savedSubscription];

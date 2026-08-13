@@ -109,6 +109,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
         try {
             const updatedUser = await updateCurrentUser(enabled);
             onUserUpdated(updatedUser);
+            capture('notifications_toggled', { enabled });
         } catch (error) {
             showToast(error.message || 'Could not update notification preferences.', 'error');
         } finally {
@@ -305,6 +306,11 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
                 airlines: selectedAirlineCodes,
                 result_count: flights.length,
             });
+            if (flights.length === 0) capture('search_no_results', {
+                departure_airports: selectedDepartureAirportCodes,
+                arrival_airports: selectedArrivalAirportCodes,
+                airlines: selectedAirlineCodes,
+            });
         } catch (err) {
             setError("Failed to fetch flights. " + err.message);
         } finally {
@@ -317,6 +323,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
         if (window.confirm("Are you sure you want to delete this subscription?")) {
             try {
                 await deleteSubscription(subId);
+                capture('price_alert_deleted', { subscription_id: subId });
                 setDisplaySubscriptions(prevSubs => prevSubs.filter(sub => sub.id !== subId));
                 setUserSubscriptions(prevSubs => prevSubs.filter(sub => sub.id !== subId));
                 showToast('Subscription deleted successfully!');

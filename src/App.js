@@ -9,7 +9,7 @@ import LandingPage from './LandingPage';
 import PrivacyPage from './PrivacyPage';
 import TermsPage from './TermsPage';
 import AlertsPage from './AlertsPage';
-import { capturePageView } from './analytics';
+import { capture, capturePageView } from './analytics';
 import './App.css';
 
 const getAccountInitials = (user) => {
@@ -114,6 +114,7 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         loadAuthenticatedUser(session);
+        if (event === 'SIGNED_IN') capture('login_completed', { provider: 'google' });
       } else if (event === 'USER_UPDATED') {
         loadAuthenticatedUser(session, { force: true });
       }
@@ -123,6 +124,7 @@ function App() {
 
   const handleGoogleSignIn = async () => {
     setAuthActionError(null);
+    capture('login_started', { provider: 'google' });
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}${isAlertsPage ? '/alerts' : '/search'}` },
@@ -147,6 +149,20 @@ function App() {
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
   }, []);
+
+  const handleLanguageChange = (nextLanguage) => {
+    if (nextLanguage === language) return;
+    setLanguage(nextLanguage);
+    capture('language_changed', { language: nextLanguage });
+  };
+
+  const handleThemeToggle = () => {
+    setTheme((currentTheme) => {
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      capture('theme_changed', { theme: nextTheme });
+      return nextTheme;
+    });
+  };
 
   useEffect(() => {
     if (!toast) return undefined;
@@ -184,7 +200,7 @@ function App() {
           </nav>
           <div className="language-selector" aria-label={t('language')}>
             {languages.map(({ code, label }) => (
-              <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => setLanguage(code)} aria-pressed={language === code} aria-label={label} title={label}>
+              <button key={code} type="button" className={`language-button ${language === code ? 'active' : ''}`} onClick={() => handleLanguageChange(code)} aria-pressed={language === code} aria-label={label} title={label}>
                 <span className="language-label">{code.toUpperCase()}</span>
               </button>
             ))}
@@ -193,7 +209,7 @@ function App() {
             <button
               type="button"
               className="theme-toggle"
-              onClick={() => setTheme((currentTheme) => currentTheme === 'dark' ? 'light' : 'dark')}
+              onClick={handleThemeToggle}
               aria-pressed={theme === 'dark'}
               aria-label={t('switchMode', { mode: t(theme === 'dark' ? 'lightMode' : 'darkMode') })}
             >

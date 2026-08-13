@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { deleteSubscription, fetchAirlines, fetchAirports, fetchFlightById, updateCurrentUser } from './api';
 import FlightDetailModal from './FlightDetailModal';
 import { useLanguage } from './i18n';
+import { capture } from './analytics';
 
 const titleCase = (value) => value ? value.toLowerCase().split(' ').map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') : '';
 
@@ -22,8 +23,8 @@ export default function AlertsPage({ theme, user, onUserUpdated, showToast, user
   useEffect(() => { loadSubscriptions(); }, [loadSubscriptions]);
   const airport = (code) => { const item = airports.find((a) => a.code === code); return item ? `${titleCase(item.name)} (${code})` : code || '—'; };
   const airline = (code) => { const item = airlines.find((a) => a.code === code); return item ? `${titleCase(item.name)} (${code})` : code || ''; };
-  const toggleNotifications = async (enabled) => { setNotificationsSaving(true); try { onUserUpdated(await updateCurrentUser(enabled)); } catch (error) { showToast(error.message || 'Could not update notification preferences.', 'error'); } finally { setNotificationsSaving(false); } };
-  const removeAlert = async (id) => { if (!window.confirm(t('deleteAlertConfirmation'))) return; try { await deleteSubscription(id); setUserSubscriptions((current) => current.filter((sub) => sub.id !== id)); showToast(t('alertDeleted')); } catch (error) { showToast(error.message || 'Could not delete this alert.', 'error'); } };
+  const toggleNotifications = async (enabled) => { setNotificationsSaving(true); try { onUserUpdated(await updateCurrentUser(enabled)); capture('notifications_toggled', { enabled }); } catch (error) { showToast(error.message || 'Could not update notification preferences.', 'error'); } finally { setNotificationsSaving(false); } };
+  const removeAlert = async (sub) => { if (!window.confirm(t('deleteAlertConfirmation'))) return; try { await deleteSubscription(sub.subscriptionId); setUserSubscriptions((current) => current.filter((item) => item.id !== sub.subscriptionId)); capture('price_alert_deleted', { flight_id: sub.flightId, departure_airport: sub.departureAirportCode, arrival_airport: sub.arrivalAirportCode, airline: sub.airlineCode }); showToast(t('alertDeleted')); } catch (error) { showToast(error.message || 'Could not delete this alert.', 'error'); } };
   if (!user) return <section className="alerts-page empty-alerts"><h1>{t('priceAlerts')}</h1><p>{t('signInToManageAlerts')}</p></section>;
   return <section className="alerts-page" aria-label={t('priceAlerts')}>
     <header className="alerts-page-header">
@@ -43,7 +44,7 @@ export default function AlertsPage({ theme, user, onUserUpdated, showToast, user
     </section>
     {(loading || subscriptionsLoading) && <p className="info-message">{t('loadingAlerts')}</p>}{subscriptionsError && <p className="error-message-inline">{subscriptionsError}</p>}
     {!loading && !subscriptionsLoading && !displaySubscriptions.length && <div className="alerts-empty-state"><p>{t('noTrackedFlights')}</p><a className="alerts-search-link" href="/search">{t('searchFlights')}</a></div>}
-    <ul className="alerts-list">{displaySubscriptions.map((sub) => <li key={sub.subscriptionId} className="alert-card"><button type="button" className="alert-card-main" onClick={() => setSelectedFlight(sub)}><span className="subscription-status-icon">{sub.isActive ? '🟢' : '⚫'}</span><span><strong>{airport(sub.departureAirportCode)} → {airport(sub.arrivalAirportCode)}</strong><small>{sub.departureDate && format(new Date(sub.departureDate), 'dd MMM yyyy')} {airline(sub.airlineCode)}</small></span><span className="sub-price">{t('target')} {Number(sub.targetPrice).toFixed(0)}€</span></button><button type="button" className="delete-sub-button" onClick={() => removeAlert(sub.subscriptionId)} title={t('deleteSubscription')} aria-label={t('deleteSubscription')}>×</button></li>)}</ul>
+    <ul className="alerts-list">{displaySubscriptions.map((sub) => <li key={sub.subscriptionId} className="alert-card"><button type="button" className="alert-card-main" onClick={() => setSelectedFlight(sub)}><span className="subscription-status-icon">{sub.isActive ? '🟢' : '⚫'}</span><span><strong>{airport(sub.departureAirportCode)} → {airport(sub.arrivalAirportCode)}</strong><small>{sub.departureDate && format(new Date(sub.departureDate), 'dd MMM yyyy')} {airline(sub.airlineCode)}</small></span><span className="sub-price">{t('target')} {Number(sub.targetPrice).toFixed(0)}€</span></button><button type="button" className="delete-sub-button" onClick={() => removeAlert(sub)} title={t('deleteSubscription')} aria-label={t('deleteSubscription')}>×</button></li>)}</ul>
     {selectedFlight && <FlightDetailModal theme={theme} flight={selectedFlight} onClose={() => setSelectedFlight(null)} airlines={airlines} isAuthenticated userSubscriptions={userSubscriptions} setUserSubscriptions={setUserSubscriptions} showToast={showToast} />}
   </section>;
 }
