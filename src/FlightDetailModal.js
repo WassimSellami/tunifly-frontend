@@ -155,9 +155,8 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
 
         if (historicalRange <= 0) return null;
 
-        const padding = historicalRange / 4;
-        const gaugeMin = minPrice - padding;
-        const gaugeMax = maxPrice + padding;
+        const gaugeMin = minPrice;
+        const gaugeMax = maxPrice;
         const gaugeRange = gaugeMax - gaugeMin;
 
         const lowThreshold = gaugeMin + (gaugeRange * 0.25);
