@@ -55,7 +55,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
     const [selectedDepartureAirportCodes, setSelectedDepartureAirportCodes] = useState([]);
     const [selectedArrivalAirportCodes, setSelectedArrivalAirportCodes] = useState([]);
     const minSelectableDate = useMemo(() => startOfDay(new Date()), []);
-    const maxSelectableDate = useMemo(() => addMonths(minSelectableDate, 3), [minSelectableDate]);
+    const maxSelectableDate = useMemo(() => addMonths(minSelectableDate, 9), [minSelectableDate]);
     const initialStartDays = 0;
     const initialEndDays = differenceInDays(addMonths(minSelectableDate, 1), minSelectableDate);
     const [dateRangeSliderValues, setDateRangeSliderValues] = useState([initialStartDays, initialEndDays]);
@@ -68,7 +68,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
             { label: t('restOfMonth', { month: getMonthName(minSelectableDate, language) }), start: minSelectableDate, end: capAtMaximumDate(endOfMonth(minSelectableDate)) },
         ];
 
-        for (let monthOffset = 1; monthOffset <= 3; monthOffset += 1) {
+        for (let monthOffset = 1; monthOffset <= 9; monthOffset += 1) {
             const monthStart = startOfMonth(addMonths(minSelectableDate, monthOffset));
             if (isAfter(monthStart, maxSelectableDate)) break;
 
@@ -79,7 +79,7 @@ const FlightSearchForm = ({ theme, user, onUserUpdated, showToast, userSubscript
             });
         }
 
-        presets.push({ label: t('next3Months'), start: minSelectableDate, end: maxSelectableDate });
+        presets.push({ label: t('next9Months'), start: minSelectableDate, end: maxSelectableDate });
         return presets;
     }, [language, maxSelectableDate, minSelectableDate, t]);
     const [selectedAirlineCodes, setSelectedAirlineCodes] = useState([]);
