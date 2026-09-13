@@ -146,6 +146,32 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
         });
     };
 
+    const handleShareClick = async () => {
+        if (!flight.bookingUrl) return;
+
+        const shareData = {
+            title: `${flight.departureAirportCode} to ${flight.arrivalAirportCode}`,
+            text: `${flight.departureAirportCode} to ${flight.arrivalAirportCode} - ${departureDateFormatted}`,
+            url: flight.bookingUrl,
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else if (navigator.clipboard) {
+                await navigator.clipboard.writeText(flight.bookingUrl);
+                showToast?.(t('linkCopied'));
+            } else {
+                throw new Error('Sharing is not supported by this browser.');
+            }
+            capture('booking_link_shared', { flight_id: flight.id });
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                showToast?.(t('shareFailed'), 'error');
+            }
+        }
+    };
+
     const priceAnalytics = useMemo(() => {
         if (history.length < 2) return null;
         const prices = history.map(h => h.priceEur);
@@ -419,7 +445,10 @@ const FlightDetailModal = ({ theme, flight, onClose, airlines, isAuthenticated, 
                         </div>
                         <div className="book-now-container">
                             <h3>{t('readyToBook')}</h3>
-                            <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" onClick={handleBookingClick} className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>{t('bookNow')}</a>
+                            <div className="booking-actions">
+                                <a href={flight.bookingUrl || '#'} target="_blank" rel="noopener noreferrer" onClick={handleBookingClick} className={`action-button book-now-button ${!flight.bookingUrl ? 'disabled' : ''}`}>{t('bookNow')}</a>
+                                <button type="button" onClick={handleShareClick} className="action-button share-button" disabled={!flight.bookingUrl}>{t('shareFlight')}</button>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -331,6 +331,16 @@
     background-color: var(--book-now-bg);
 }
 
+.booking-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.share-button {
+    background-color: var(--secondary-button-bg);
+    color: var(--secondary-button-text);
+}
+
 .action-button:hover:not(:disabled) {
     filter: brightness(1.15);
 }
@@ -490,5 +500,9 @@
     .target-price-input,
     .form-group .action-button {
         width: 100%;
+    }
+
+    .booking-actions {
+        flex-direction: column;
     }
 }
